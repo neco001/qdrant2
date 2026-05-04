@@ -31,56 +31,56 @@ def get_embedding(text: str) -> List[float]:
     
     return response.data[0].embedding
 
-def get_collection_size(collection_name: str) -> int:
-    """Fetch the expected vector size for a collection from Qdrant."""
+def get_collection_size(collection_name: str) -> Optional[int]:
+    """Fetch the expected vector size for a collection from Qdrant. Returns None if collection doesn't exist."""
     try:
         response = requests.get(f"{QDRANT_URL}/collections/{collection_name}", timeout=5)
         if response.status_code != 200:
-            return 1024
+            return None
         
         data = response.json().get("result", {})
         vectors = data.get("config", {}).get("params", {}).get("vectors", {})
         
         if isinstance(vectors, dict):
-            # Check if it's a single vector params or a map of named vectors
             if "size" in vectors:
                 return vectors["size"]
-            # If it's a map, take the first one or look for common names
             for v in vectors.values():
                 if isinstance(v, dict) and "size" in v:
                     return v["size"]
-        return 1024
+        return None
     except Exception:
-        return 1024
+        return None
 
-def create_collection_if_not_exists(collection_name: str):
-    """Create Qdrant collection if it doesn't exist."""
-    response = requests.get(f"{QDRANT_URL}/collections/{collection_name}")
+def create_collection_if_not_exists(collection_name: str, vector_size: int):
+    """Create Qdrant collection if it doesn't exist with specified vector size."""
+    response = requests.get(f"{QDRANT_URL}/collections/{collection_name}", timeout=5)
     if response.status_code == 200:
         return
         
     config = {
         "vectors": {
-            "size": 1024,
+            "size": vector_size,
             "distance": "Cosine"
         }
     }
-    res = requests.put(f"{QDRANT_URL}/collections/{collection_name}", json=config)
+    res = requests.put(f"{QDRANT_URL}/collections/{collection_name}", json=config, timeout=5)
     if res.status_code != 200:
         raise Exception(f"Failed to create collection: {res.text}")
 
 @mcp.tool()
 def qdrant_search(query: str, collection_name: str, limit: int = 5) -> List[Dict[str, Any]]:
-    """Search for similar texts in a Qdrant collection. Automatically adjusts dimensions."""
     vector = get_embedding(query)
     target_size = get_collection_size(collection_name)
     
-    # Adjust dimensions
+    if target_size is None:
+        raise ValueError(f"Collection '{collection_name}' does not exist.")
+
     if len(vector) != target_size:
-        if len(vector) < target_size:
-            vector.extend([0.0] * (target_size - len(vector)))
-        else:
-            vector = vector[:target_size]
+        raise ValueError(
+            f"Dimension mismatch: Embedding produced {len(vector)}D vector, "
+            f"but collection '{collection_name}' expects {target_size}D. "
+            "Padding/truncation is disabled to preserve search quality."
+        )
 
     search_payload = {
         "vector": vector,
@@ -121,18 +121,24 @@ def qdrant_scroll(collection_name: str, limit: int = 10, offset: Optional[str] =
 
 @mcp.tool()
 def qdrant_store(text: str, metadata: Dict[str, Any], collection_name: str) -> str:
-    """Store text and metadata in a Qdrant collection. Automatically adjusts dimensions."""
-    create_collection_if_not_exists(collection_name)
     vector = get_embedding(text)
     target_size = get_collection_size(collection_name)
     
-    if len(vector) != target_size:
-        if len(vector) < target_size:
-            vector.extend([0.0] * (target_size - len(vector)))
-        else:
-            vector = vector[:target_size]
+    if target_size is None:
+        # Create collection with the size of the current embedding
+        create_collection_if_not_exists(collection_name, len(vector))
+        target_size = len(vector)
+    elif len(vector) != target_size:
+        raise ValueError(
+            f"Dimension mismatch: Embedding produced {len(vector)}D vector, "
+            f"but existing collection '{collection_name}' expects {target_size}D."
+        )
 
     point_id = str(uuid.uuid4())
+    
+    if "text" in metadata:
+        raise ValueError("Metadata cannot contain 'text' key as it is reserved for the document content.")
+        
     payload = {"text": text}
     payload.update(metadata)
     
@@ -190,7 +196,7 @@ def qdrant_list_collections() -> List[Dict[str, Any]]:
                     "name": coll_name,
                     "vector_size": vectors.get("size", 0) if isinstance(vectors, dict) else 0,
                     "point_count": result_config.get("points_count", 0),
-                    "distance_metric": params.get("distance", "Cosine")
+                    "distance_metric": vectors.get("distance", "Cosine") if isinstance(vectors, dict) else "Cosine"
                 })
             else:
                 # Fallback to minimal info if detailed request fails
