@@ -1,50 +1,70 @@
 {
-  "timestamp": "2026-05-04T12:53:14.098262Z",
-  "project_dir": "c:\\Repos\\_Toolbox\\mcp_servers\\qdrant2",
+  "timestamp": "2026-05-04T14:57:39.124025Z",
+  "project_dir": ".",
   "files": {
-    "c:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py": {
+    "main.py": {
+      "functions": [
+        {
+          "name": "main",
+          "signature": "main()",
+          "lineno": 1,
+          "docstring": null,
+          "file": "main.py"
+        }
+      ],
+      "classes": [],
+      "imports": []
+    },
+    "qdrant_universal.py": {
       "functions": [
         {
           "name": "get_embedding",
           "signature": "get_embedding(text)",
           "lineno": 17,
           "docstring": "Get embedding for text using OpenAI-compatible API.",
-          "file": "c:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+          "file": "qdrant_universal.py"
         },
         {
           "name": "get_collection_size",
           "signature": "get_collection_size(collection_name)",
           "lineno": 34,
           "docstring": "Fetch the expected vector size for a collection from Qdrant.",
-          "file": "c:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+          "file": "qdrant_universal.py"
         },
         {
           "name": "create_collection_if_not_exists",
           "signature": "create_collection_if_not_exists(collection_name)",
           "lineno": 56,
           "docstring": "Create Qdrant collection if it doesn't exist.",
-          "file": "c:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+          "file": "qdrant_universal.py"
         },
         {
           "name": "qdrant_search",
           "signature": "qdrant_search(query, collection_name, limit)",
           "lineno": 73,
           "docstring": "Search for similar texts in a Qdrant collection. Automatically adjusts dimensions.",
-          "file": "c:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+          "file": "qdrant_universal.py"
         },
         {
           "name": "qdrant_scroll",
           "signature": "qdrant_scroll(collection_name, limit, offset)",
           "lineno": 102,
           "docstring": "Scroll through records in a Qdrant collection (introspection tool).",
-          "file": "c:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+          "file": "qdrant_universal.py"
         },
         {
           "name": "qdrant_store",
           "signature": "qdrant_store(text, metadata, collection_name)",
           "lineno": 123,
           "docstring": "Store text and metadata in a Qdrant collection. Automatically adjusts dimensions.",
-          "file": "c:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+          "file": "qdrant_universal.py"
+        },
+        {
+          "name": "qdrant_list_collections",
+          "signature": "qdrant_list_collections()",
+          "lineno": 160,
+          "docstring": "List all collections in Qdrant with their metadata.",
+          "file": "qdrant_universal.py"
         }
       ],
       "classes": [],
@@ -83,58 +103,226 @@
           ]
         }
       ]
+    },
+    "test_qdrant_list_collections.py": {
+      "functions": [
+        {
+          "name": "test_qdrant_list_collections_success",
+          "signature": "test_qdrant_list_collections_success()",
+          "lineno": 6,
+          "docstring": "Test successful retrieval of collections from Qdrant API",
+          "file": "test_qdrant_list_collections.py"
+        },
+        {
+          "name": "test_qdrant_list_collections_api_error",
+          "signature": "test_qdrant_list_collections_api_error()",
+          "lineno": 36,
+          "docstring": "Test that exception is raised when API returns non-200 status",
+          "file": "test_qdrant_list_collections.py"
+        },
+        {
+          "name": "test_qdrant_list_collections_request_timeout",
+          "signature": "test_qdrant_list_collections_request_timeout()",
+          "lineno": 45,
+          "docstring": "Test that timeout exception is handled properly",
+          "file": "test_qdrant_list_collections.py"
+        },
+        {
+          "name": "test_qdrant_list_collections_connection_error",
+          "signature": "test_qdrant_list_collections_connection_error()",
+          "lineno": 51,
+          "docstring": "Test that connection error is handled properly",
+          "file": "test_qdrant_list_collections.py"
+        },
+        {
+          "name": "test_qdrant_list_collections_empty_collections",
+          "signature": "test_qdrant_list_collections_empty_collections()",
+          "lineno": 57,
+          "docstring": "Test behavior when no collections exist",
+          "file": "test_qdrant_list_collections.py"
+        },
+        {
+          "name": "test_qdrant_list_collections_missing_fields",
+          "signature": "test_qdrant_list_collections_missing_fields()",
+          "lineno": 66,
+          "docstring": "Test handling of collections with missing optional fields",
+          "file": "test_qdrant_list_collections.py"
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "pytest",
+          "alias": null
+        },
+        {
+          "module": "requests",
+          "alias": null
+        },
+        {
+          "module": "unittest.mock",
+          "names": [
+            "patch",
+            "Mock"
+          ]
+        },
+        {
+          "module": "qdrant_universal",
+          "names": [
+            "qdrant_list_collections"
+          ]
+        }
+      ]
+    },
+    "test_qdrant_live.py": {
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "module": "requests",
+          "alias": null
+        },
+        {
+          "module": "json",
+          "alias": null
+        }
+      ]
     }
   },
   "functions": [
+    {
+      "name": "main",
+      "signature": "main()",
+      "lineno": 1,
+      "docstring": null,
+      "file": "main.py"
+    },
     {
       "name": "get_embedding",
       "signature": "get_embedding(text)",
       "lineno": 17,
       "docstring": "Get embedding for text using OpenAI-compatible API.",
-      "file": "c:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+      "file": "qdrant_universal.py"
     },
     {
       "name": "get_collection_size",
       "signature": "get_collection_size(collection_name)",
       "lineno": 34,
       "docstring": "Fetch the expected vector size for a collection from Qdrant.",
-      "file": "c:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+      "file": "qdrant_universal.py"
     },
     {
       "name": "create_collection_if_not_exists",
       "signature": "create_collection_if_not_exists(collection_name)",
       "lineno": 56,
       "docstring": "Create Qdrant collection if it doesn't exist.",
-      "file": "c:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+      "file": "qdrant_universal.py"
     },
     {
       "name": "qdrant_search",
       "signature": "qdrant_search(query, collection_name, limit)",
       "lineno": 73,
       "docstring": "Search for similar texts in a Qdrant collection. Automatically adjusts dimensions.",
-      "file": "c:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+      "file": "qdrant_universal.py"
     },
     {
       "name": "qdrant_scroll",
       "signature": "qdrant_scroll(collection_name, limit, offset)",
       "lineno": 102,
       "docstring": "Scroll through records in a Qdrant collection (introspection tool).",
-      "file": "c:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+      "file": "qdrant_universal.py"
     },
     {
       "name": "qdrant_store",
       "signature": "qdrant_store(text, metadata, collection_name)",
       "lineno": 123,
       "docstring": "Store text and metadata in a Qdrant collection. Automatically adjusts dimensions.",
-      "file": "c:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+      "file": "qdrant_universal.py"
+    },
+    {
+      "name": "qdrant_list_collections",
+      "signature": "qdrant_list_collections()",
+      "lineno": 160,
+      "docstring": "List all collections in Qdrant with their metadata.",
+      "file": "qdrant_universal.py"
+    },
+    {
+      "name": "test_qdrant_list_collections_success",
+      "signature": "test_qdrant_list_collections_success()",
+      "lineno": 6,
+      "docstring": "Test successful retrieval of collections from Qdrant API",
+      "file": "test_qdrant_list_collections.py"
+    },
+    {
+      "name": "test_qdrant_list_collections_api_error",
+      "signature": "test_qdrant_list_collections_api_error()",
+      "lineno": 36,
+      "docstring": "Test that exception is raised when API returns non-200 status",
+      "file": "test_qdrant_list_collections.py"
+    },
+    {
+      "name": "test_qdrant_list_collections_request_timeout",
+      "signature": "test_qdrant_list_collections_request_timeout()",
+      "lineno": 45,
+      "docstring": "Test that timeout exception is handled properly",
+      "file": "test_qdrant_list_collections.py"
+    },
+    {
+      "name": "test_qdrant_list_collections_connection_error",
+      "signature": "test_qdrant_list_collections_connection_error()",
+      "lineno": 51,
+      "docstring": "Test that connection error is handled properly",
+      "file": "test_qdrant_list_collections.py"
+    },
+    {
+      "name": "test_qdrant_list_collections_empty_collections",
+      "signature": "test_qdrant_list_collections_empty_collections()",
+      "lineno": 57,
+      "docstring": "Test behavior when no collections exist",
+      "file": "test_qdrant_list_collections.py"
+    },
+    {
+      "name": "test_qdrant_list_collections_missing_fields",
+      "signature": "test_qdrant_list_collections_missing_fields()",
+      "lineno": 66,
+      "docstring": "Test handling of collections with missing optional fields",
+      "file": "test_qdrant_list_collections.py"
     }
   ],
   "classes": [],
-  "mappings": {},
+  "mappings": {
+    "test_qdrant_list_collections.py:test_qdrant_list_collections_success": [
+      "qdrant_list_collections"
+    ],
+    "test_qdrant_list_collections.py:test_qdrant_list_collections_empty_collections": [
+      "qdrant_list_collections"
+    ],
+    "test_qdrant_list_collections.py:test_qdrant_list_collections_missing_fields": [
+      "qdrant_list_collections"
+    ],
+    "test_qdrant_list_collections.py:test_qdrant_list_collections_api_error": [
+      "qdrant_list_collections"
+    ],
+    "test_qdrant_list_collections.py:test_qdrant_list_collections_request_timeout": [
+      "qdrant_list_collections"
+    ],
+    "test_qdrant_list_collections.py:test_qdrant_list_collections_connection_error": [
+      "qdrant_list_collections"
+    ]
+  },
   "content_hashes": [
     {
+      "file_path": "main.py",
+      "hash_value": "ae35f649ef7392ab926a6020677a788c883e5c679e06a605339bd2defa7775b5",
+      "hash_algorithm": "sha256",
+      "semantic_markers": [
+        "func:main"
+      ],
+      "created_at": "2026-05-04T14:57:39.364075Z"
+    },
+    {
       "file_path": "qdrant_universal.py",
-      "hash_value": "56b89c884f7eaca2987beb3e504930a366403f2785a7009906af0e67ee79279b",
+      "hash_value": "8f75d217519c29c1762c869fccf221041aab297cf6e1717caf171a41d326342a",
       "hash_algorithm": "sha256",
       "semantic_markers": [
         "func:get_embedding",
@@ -143,6 +331,7 @@
         "func:qdrant_search",
         "func:qdrant_scroll",
         "func:qdrant_store",
+        "func:qdrant_list_collections",
         "import:os",
         "import:requests",
         "import:uuid",
@@ -150,7 +339,35 @@
         "import:openai",
         "import:fastmcp"
       ],
-      "created_at": "2026-05-04T12:53:14.691409Z"
+      "created_at": "2026-05-04T14:57:39.365810Z"
+    },
+    {
+      "file_path": "test_qdrant_list_collections.py",
+      "hash_value": "26d7321fcf1d95174b08be2d5ed4eacdf380942c8c0609acbc5a20e4403133d3",
+      "hash_algorithm": "sha256",
+      "semantic_markers": [
+        "func:test_qdrant_list_collections_success",
+        "func:test_qdrant_list_collections_api_error",
+        "func:test_qdrant_list_collections_request_timeout",
+        "func:test_qdrant_list_collections_connection_error",
+        "func:test_qdrant_list_collections_empty_collections",
+        "func:test_qdrant_list_collections_missing_fields",
+        "import:pytest",
+        "import:requests",
+        "import:unittest.mock",
+        "import:qdrant_universal"
+      ],
+      "created_at": "2026-05-04T14:57:39.366889Z"
+    },
+    {
+      "file_path": "test_qdrant_live.py",
+      "hash_value": "6ab7bbf8b75707502d2f0c6b30f647a84a73e093814fbe7cddbae77835ce9b86",
+      "hash_algorithm": "sha256",
+      "semantic_markers": [
+        "import:requests",
+        "import:json"
+      ],
+      "created_at": "2026-05-04T14:57:39.368232Z"
     }
   ],
   "shadow_mode": false
