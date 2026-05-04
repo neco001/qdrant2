@@ -25,6 +25,16 @@ Most MCP servers for Qdrant are either too rigid (hardcoded dimensions) or too s
 - `qdrant_list_collections`: List all available collections and their stats.
 - `qdrant_scroll`: Browse through points in a collection.
 
+---
+
+## Better Together
+
+This MCP server handles the _retrieval_ and _management_ of vectors, but it works best when your data is already indexed.
+
+Pair it with **[Qdrant Sentinel](https://github.com/neco001/Qdrant_Sentinel.git)** — an automated codebase indexer that watches your local projects and keeps them synced with Qdrant in real-time. Together, they provide a seamless "memory" for your AI agents.
+
+---
+
 ## Prerequisites
 
 Before using this MCP server, you need a running Qdrant instance and an Embedding API provider.
@@ -32,6 +42,7 @@ Before using this MCP server, you need a running Qdrant instance and an Embeddin
 ### 1. Set Up Qdrant (Vector Database)
 
 #### Option A: Local Setup (Docker) - Recommended
+
 The easiest way to run Qdrant locally is via Docker:
 
 ```bash
@@ -44,6 +55,7 @@ docker run -d \
 ```
 
 #### Option B: Qdrant Cloud - Free Tier Available
+
 1. Sign up at [Qdrant Cloud](https://cloud.qdrant.io/).
 2. Create a free cluster.
 3. Copy your **Cluster URL** and **API Key**.
@@ -125,10 +137,7 @@ Add this to your `%APPDATA%\.gemini\antigravity\mcp_config.json`:
   "mcpServers": {
     "qdrant-universal": {
       "command": "uv",
-      "args": [
-        "run",
-        "path/to/qdrant_universal.py"
-      ],
+      "args": ["run", "path/to/qdrant_universal.py"],
       "env": {
         "QDRANT_URL": "http://localhost:6333",
         "EMBEDDING_API_KEY": "your_api_key_here",
