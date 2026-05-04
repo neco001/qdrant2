@@ -81,16 +81,21 @@ Add to `claude_desktop_config.json`:
 {
   "mcpServers": {
     "qdrant-universal": {
-      "command": "uv",
-      "args": ["--directory", "path/to/server", "run", "qdrant_universal.py"],
+      "command": "C:/path/to/server/.venv/Scripts/python.exe",
+      "args": ["C:/path/to/server/qdrant_universal.py"],
       "env": {
-        "QDRANT_URL": "...",
-        "EMBEDDING_API_KEY": "..."
+        "QDRANT_URL": "http://localhost:6333",
+        "EMBEDDING_API_KEY": "your-key",
+        "EMBEDDING_BASE_URL": "...",
+        "EMBEDDING_MODEL_NAME": "..."
       }
     }
   }
 }
 ```
+
+> [!TIP]
+> On Windows, using `uv run` for MCP servers can cause "Access Denied" errors (`uv-trampoline`) when multiple sessions start simultaneously. Using the direct path to the `.venv` python interpreter is much more stable.
 
 ## License
 MIT

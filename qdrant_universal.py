@@ -1,6 +1,7 @@
 import os
 import requests
 import uuid
+import threading
 from typing import Dict, Any, List, Optional
 from openai import OpenAI
 from fastmcp import FastMCP
@@ -14,15 +15,25 @@ EMBEDDING_API_KEY = os.getenv("EMBEDDING_API_KEY", "")
 EMBEDDING_BASE_URL = os.getenv("EMBEDDING_BASE_URL", "https://api.openai.com/v1")
 EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME", "text-embedding-v4")
 
+# Initialize global clients
+_openai_client: Optional[OpenAI] = None
+_collection_lock = threading.Lock()
+
+def get_openai_client() -> OpenAI:
+    """Lazy initialization of the OpenAI client."""
+    global _openai_client
+    if _openai_client is None:
+        if not EMBEDDING_API_KEY:
+            raise ValueError("EMBEDDING_API_KEY is not set")
+        _openai_client = OpenAI(
+            api_key=EMBEDDING_API_KEY,
+            base_url=EMBEDDING_BASE_URL
+        )
+    return _openai_client
+
 def get_embedding(text: str) -> List[float]:
     """Get embedding for text using OpenAI-compatible API."""
-    if not EMBEDDING_API_KEY:
-        raise ValueError("EMBEDDING_API_KEY is not set")
-        
-    client = OpenAI(
-        api_key=EMBEDDING_API_KEY,
-        base_url=EMBEDDING_BASE_URL
-    )
+    client = get_openai_client()
     
     response = client.embeddings.create(
         input=text,
@@ -53,19 +64,25 @@ def get_collection_size(collection_name: str) -> Optional[int]:
 
 def create_collection_if_not_exists(collection_name: str, vector_size: int):
     """Create Qdrant collection if it doesn't exist with specified vector size."""
-    response = requests.get(f"{QDRANT_URL}/collections/{collection_name}", timeout=5)
-    if response.status_code == 200:
-        return
-        
-    config = {
-        "vectors": {
-            "size": vector_size,
-            "distance": "Cosine"
+    with _collection_lock:
+        response = requests.get(f"{QDRANT_URL}/collections/{collection_name}", timeout=5)
+        if response.status_code == 200:
+            return
+            
+        config = {
+            "vectors": {
+                "size": vector_size,
+                "distance": "Cosine"
+            }
         }
-    }
-    res = requests.put(f"{QDRANT_URL}/collections/{collection_name}", json=config, timeout=5)
-    if res.status_code != 200:
-        raise Exception(f"Failed to create collection: {res.text}")
+        res = requests.put(f"{QDRANT_URL}/collections/{collection_name}", json=config, timeout=5)
+        if res.status_code != 200:
+            # If it was created by another process in the meantime, it might fail.
+            # We check again to be sure.
+            response = requests.get(f"{QDRANT_URL}/collections/{collection_name}", timeout=5)
+            if response.status_code == 200:
+                return
+            raise Exception(f"Failed to create collection: {res.text}")
 
 @mcp.tool()
 def qdrant_search(query: str, collection_name: str, limit: int = 5) -> List[Dict[str, Any]]:
