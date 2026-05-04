@@ -1,0 +1,215 @@
+import os
+import requests
+import uuid
+from typing import Dict, Any, List, Optional
+from openai import OpenAI
+from fastmcp import FastMCP
+
+# Initialize FastMCP
+mcp = FastMCP("Qdrant Universal")
+
+# Configuration from environment variables
+QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
+EMBEDDING_API_KEY = os.getenv("EMBEDDING_API_KEY", "")
+EMBEDDING_BASE_URL = os.getenv("EMBEDDING_BASE_URL", "https://api.openai.com/v1")
+EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME", "text-embedding-v4")
+
+def get_embedding(text: str) -> List[float]:
+    """Get embedding for text using OpenAI-compatible API."""
+    if not EMBEDDING_API_KEY:
+        raise ValueError("EMBEDDING_API_KEY is not set")
+        
+    client = OpenAI(
+        api_key=EMBEDDING_API_KEY,
+        base_url=EMBEDDING_BASE_URL
+    )
+    
+    response = client.embeddings.create(
+        input=text,
+        model=EMBEDDING_MODEL_NAME
+    )
+    
+    return response.data[0].embedding
+
+def get_collection_size(collection_name: str) -> int:
+    """Fetch the expected vector size for a collection from Qdrant."""
+    try:
+        response = requests.get(f"{QDRANT_URL}/collections/{collection_name}", timeout=5)
+        if response.status_code != 200:
+            return 1024
+        
+        data = response.json().get("result", {})
+        vectors = data.get("config", {}).get("params", {}).get("vectors", {})
+        
+        if isinstance(vectors, dict):
+            # Check if it's a single vector params or a map of named vectors
+            if "size" in vectors:
+                return vectors["size"]
+            # If it's a map, take the first one or look for common names
+            for v in vectors.values():
+                if isinstance(v, dict) and "size" in v:
+                    return v["size"]
+        return 1024
+    except Exception:
+        return 1024
+
+def create_collection_if_not_exists(collection_name: str):
+    """Create Qdrant collection if it doesn't exist."""
+    response = requests.get(f"{QDRANT_URL}/collections/{collection_name}")
+    if response.status_code == 200:
+        return
+        
+    config = {
+        "vectors": {
+            "size": 1024,
+            "distance": "Cosine"
+        }
+    }
+    res = requests.put(f"{QDRANT_URL}/collections/{collection_name}", json=config)
+    if res.status_code != 200:
+        raise Exception(f"Failed to create collection: {res.text}")
+
+@mcp.tool()
+def qdrant_search(query: str, collection_name: str, limit: int = 5) -> List[Dict[str, Any]]:
+    """Search for similar texts in a Qdrant collection. Automatically adjusts dimensions."""
+    vector = get_embedding(query)
+    target_size = get_collection_size(collection_name)
+    
+    # Adjust dimensions
+    if len(vector) != target_size:
+        if len(vector) < target_size:
+            vector.extend([0.0] * (target_size - len(vector)))
+        else:
+            vector = vector[:target_size]
+
+    search_payload = {
+        "vector": vector,
+        "limit": limit,
+        "with_payload": True
+    }
+    
+    response = requests.post(
+        f"{QDRANT_URL}/collections/{collection_name}/points/search",
+        json=search_payload
+    )
+    
+    if response.status_code != 200:
+        raise Exception(f"Search failed for {collection_name} (size {target_size}): {response.text}")
+        
+    return [hit["payload"] for hit in response.json().get("result", [])]
+
+@mcp.tool()
+def qdrant_scroll(collection_name: str, limit: int = 10, offset: Optional[str] = None) -> Dict[str, Any]:
+    """Scroll through records in a Qdrant collection (introspection tool)."""
+    payload = {
+        "limit": limit,
+        "with_payload": True,
+        "with_vectors": False
+    }
+    if offset:
+        payload["offset"] = offset
+        
+    response = requests.post(
+        f"{QDRANT_URL}/collections/{collection_name}/points/scroll",
+        json=payload
+    )
+    
+    if response.status_code != 200:
+        raise Exception(f"Scroll failed: {response.text}")
+        
+    return response.json().get("result", {})
+
+@mcp.tool()
+def qdrant_store(text: str, metadata: Dict[str, Any], collection_name: str) -> str:
+    """Store text and metadata in a Qdrant collection. Automatically adjusts dimensions."""
+    create_collection_if_not_exists(collection_name)
+    vector = get_embedding(text)
+    target_size = get_collection_size(collection_name)
+    
+    if len(vector) != target_size:
+        if len(vector) < target_size:
+            vector.extend([0.0] * (target_size - len(vector)))
+        else:
+            vector = vector[:target_size]
+
+    point_id = str(uuid.uuid4())
+    payload = {"text": text}
+    payload.update(metadata)
+    
+    point = {
+        "points": [
+            {
+                "id": point_id,
+                "vector": vector,
+                "payload": payload
+            }
+        ]
+    }
+    
+    response = requests.put(
+        f"{QDRANT_URL}/collections/{collection_name}/points?wait=true",
+        json=point
+    )
+    
+    if response.status_code != 200:
+        raise Exception(f"Store failed: {response.text}")
+        
+    return f"Stored in {collection_name} (size {target_size}) with ID: {point_id}"
+
+@mcp.tool()
+def qdrant_list_collections() -> List[Dict[str, Any]]:
+    """List all collections in Qdrant with their metadata."""
+    response = requests.get(
+        f"{QDRANT_URL}/collections",
+        timeout=5
+    )
+    
+    if response.status_code != 200:
+        raise Exception(f"Failed to list collections: {response.text}")
+    
+    data = response.json()
+    collections = data.get("result", {}).get("collections", [])
+    
+    result = []
+    for coll in collections:
+        coll_name = coll.get("name", "")
+        # Fetch detailed info for each collection to get vector_size and point_count
+        try:
+            detail_response = requests.get(
+                f"{QDRANT_URL}/collections/{coll_name}",
+                timeout=5
+            )
+            if detail_response.status_code == 200:
+                detail_data = detail_response.json()
+                result_config = detail_data.get("result", {})
+                config = result_config.get("config", {})
+                params = config.get("params", {})
+                vectors = params.get("vectors", {})
+                
+                result.append({
+                    "name": coll_name,
+                    "vector_size": vectors.get("size", 0) if isinstance(vectors, dict) else 0,
+                    "point_count": result_config.get("points_count", 0),
+                    "distance_metric": params.get("distance", "Cosine")
+                })
+            else:
+                # Fallback to minimal info if detailed request fails
+                result.append({
+                    "name": coll_name,
+                    "vector_size": 0,
+                    "point_count": 0,
+                    "distance_metric": "Cosine"
+                })
+        except Exception:
+            # Fallback on error
+            result.append({
+                "name": coll_name,
+                "vector_size": 0,
+                "point_count": 0,
+                "distance_metric": "Cosine"
+            })
+    
+    return result
+
+if __name__ == "__main__":
+    mcp.run()
