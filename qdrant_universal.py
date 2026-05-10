@@ -199,6 +199,46 @@ def qdrant_store(text: str, metadata: Dict[str, Any], collection_name: str) -> s
     return f"Stored in {collection_name} (size {len(vector)}) with ID: {point_id}"
 
 @mcp.tool()
+def qdrant_get_symbol_code(collection_name: str, symbol_name: str, file_path: str) -> str:
+    """
+    Reconstruct the full source code for a symbol by fetching and ordering its chunks.
+    """
+    payload = {
+        "limit": 100,
+        "filter": {
+            "must": [
+                {"key": "symbol_name", "match": {"value": symbol_name}},
+                {"key": "file_path", "match": {"value": file_path}}
+            ]
+        },
+        "with_payload": True,
+        "with_vectors": False
+    }
+    
+    response = _http_session.post(
+        f"{QDRANT_URL}/collections/{quote(collection_name)}/points/scroll",
+        json=payload
+    )
+    
+    if response.status_code != 200:
+        raise Exception(f"Failed to fetch chunks: {response.text}")
+        
+    points = response.json().get("result", {}).get("points", [])
+    
+    if not points:
+        return ""
+        
+    # Sort points by chunk_index
+    points.sort(key=lambda p: p.get("payload", {}).get("chunk_index", 0))
+    
+    code_parts = []
+    for p in points:
+        text = p.get("payload", {}).get("text", "")
+        code_parts.append(text)
+        
+    return "".join(code_parts)
+
+@mcp.tool()
 def qdrant_list_symbols(collection_name: str, file_path: Optional[str] = None) -> List[Dict[str, str]]:
     """
     List unique symbols (functions, classes) found in a collection.
