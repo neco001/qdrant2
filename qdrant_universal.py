@@ -2,6 +2,7 @@ import os
 import requests
 import uuid
 import threading
+from urllib.parse import quote
 from typing import Dict, Any, List, Optional
 from openai import OpenAI
 from fastmcp import FastMCP
@@ -12,23 +13,27 @@ mcp = FastMCP("Qdrant Universal")
 # Configuration from environment variables
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 EMBEDDING_API_KEY = os.getenv("EMBEDDING_API_KEY", "")
-EMBEDDING_BASE_URL = os.getenv("EMBEDDING_BASE_URL", "https://api.openai.com/v1")
+EMBEDDING_BASE_URL = os.getenv("EMBEDDING_BASE_URL", "https://dashscope-intl.aliyuncs.com/compatible-mode/v1")
 EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME", "text-embedding-v4")
 
-# Initialize global clients
+# Initialize global clients and session
 _openai_client: Optional[OpenAI] = None
+_client_lock = threading.Lock()
 _collection_lock = threading.Lock()
+_http_session = requests.Session()
 
 def get_openai_client() -> OpenAI:
     """Lazy initialization of the OpenAI client."""
     global _openai_client
     if _openai_client is None:
-        if not EMBEDDING_API_KEY:
-            raise ValueError("EMBEDDING_API_KEY is not set")
-        _openai_client = OpenAI(
-            api_key=EMBEDDING_API_KEY,
-            base_url=EMBEDDING_BASE_URL
-        )
+        with _client_lock:
+            if _openai_client is None:
+                if not EMBEDDING_API_KEY:
+                    raise ValueError("EMBEDDING_API_KEY is not set")
+                _openai_client = OpenAI(
+                    api_key=EMBEDDING_API_KEY,
+                    base_url=EMBEDDING_BASE_URL
+                )
     return _openai_client
 
 def get_embedding(text: str) -> List[float]:
@@ -45,7 +50,7 @@ def get_embedding(text: str) -> List[float]:
 def get_collection_size(collection_name: str) -> Optional[int]:
     """Fetch the expected vector size for a collection from Qdrant. Returns None if collection doesn't exist."""
     try:
-        response = requests.get(f"{QDRANT_URL}/collections/{collection_name}", timeout=5)
+        response = _http_session.get(f"{QDRANT_URL}/collections/{quote(collection_name)}", timeout=5)
         if response.status_code != 200:
             return None
         
@@ -62,10 +67,26 @@ def get_collection_size(collection_name: str) -> Optional[int]:
     except Exception:
         return None
 
+def validate_qdrant_collection(collection_name: str, expected_size: int):
+    """
+    Checks if the Qdrant collection exists and its vector size matches expected_size.
+    Raises ValueError if validation fails.
+    """
+    actual_size = get_collection_size(collection_name)
+    if actual_size is None:
+        raise ValueError(f"Collection '{collection_name}' does not exist.")
+    if actual_size != expected_size:
+        raise ValueError(
+            f"Dimension mismatch for '{collection_name}': "
+            f"expected {expected_size}D, but collection expects {actual_size}D. "
+            "Padding/truncation is disabled to preserve search quality."
+        )
+
 def create_collection_if_not_exists(collection_name: str, vector_size: int):
     """Create Qdrant collection if it doesn't exist with specified vector size."""
     with _collection_lock:
-        response = requests.get(f"{QDRANT_URL}/collections/{collection_name}", timeout=5)
+        safe_name = quote(collection_name)
+        response = _http_session.get(f"{QDRANT_URL}/collections/{safe_name}", timeout=5)
         if response.status_code == 200:
             return
             
@@ -75,11 +96,11 @@ def create_collection_if_not_exists(collection_name: str, vector_size: int):
                 "distance": "Cosine"
             }
         }
-        res = requests.put(f"{QDRANT_URL}/collections/{collection_name}", json=config, timeout=5)
+        res = _http_session.put(f"{QDRANT_URL}/collections/{safe_name}", json=config, timeout=5)
         if res.status_code != 200:
             # If it was created by another process in the meantime, it might fail.
             # We check again to be sure.
-            response = requests.get(f"{QDRANT_URL}/collections/{collection_name}", timeout=5)
+            response = _http_session.get(f"{QDRANT_URL}/collections/{safe_name}", timeout=5)
             if response.status_code == 200:
                 return
             raise Exception(f"Failed to create collection: {res.text}")
@@ -87,17 +108,7 @@ def create_collection_if_not_exists(collection_name: str, vector_size: int):
 @mcp.tool()
 def qdrant_search(query: str, collection_name: str, limit: int = 5) -> List[Dict[str, Any]]:
     vector = get_embedding(query)
-    target_size = get_collection_size(collection_name)
-    
-    if target_size is None:
-        raise ValueError(f"Collection '{collection_name}' does not exist.")
-
-    if len(vector) != target_size:
-        raise ValueError(
-            f"Dimension mismatch: Embedding produced {len(vector)}D vector, "
-            f"but collection '{collection_name}' expects {target_size}D. "
-            "Padding/truncation is disabled to preserve search quality."
-        )
+    validate_qdrant_collection(collection_name, len(vector))
 
     search_payload = {
         "vector": vector,
@@ -105,13 +116,13 @@ def qdrant_search(query: str, collection_name: str, limit: int = 5) -> List[Dict
         "with_payload": True
     }
     
-    response = requests.post(
-        f"{QDRANT_URL}/collections/{collection_name}/points/search",
+    response = _http_session.post(
+        f"{QDRANT_URL}/collections/{quote(collection_name)}/points/search",
         json=search_payload
     )
     
     if response.status_code != 200:
-        raise Exception(f"Search failed for {collection_name} (size {target_size}): {response.text}")
+        raise Exception(f"Search failed for {collection_name}: {response.text}")
         
     return [hit["payload"] for hit in response.json().get("result", [])]
 
@@ -126,8 +137,8 @@ def qdrant_scroll(collection_name: str, limit: int = 10, offset: Optional[str] =
     if offset:
         payload["offset"] = offset
         
-    response = requests.post(
-        f"{QDRANT_URL}/collections/{collection_name}/points/scroll",
+    response = _http_session.post(
+        f"{QDRANT_URL}/collections/{quote(collection_name)}/points/scroll",
         json=payload
     )
     
@@ -139,17 +150,15 @@ def qdrant_scroll(collection_name: str, limit: int = 10, offset: Optional[str] =
 @mcp.tool()
 def qdrant_store(text: str, metadata: Dict[str, Any], collection_name: str) -> str:
     vector = get_embedding(text)
-    target_size = get_collection_size(collection_name)
     
-    if target_size is None:
-        # Create collection with the size of the current embedding
-        create_collection_if_not_exists(collection_name, len(vector))
-        target_size = len(vector)
-    elif len(vector) != target_size:
-        raise ValueError(
-            f"Dimension mismatch: Embedding produced {len(vector)}D vector, "
-            f"but existing collection '{collection_name}' expects {target_size}D."
-        )
+    try:
+        validate_qdrant_collection(collection_name, len(vector))
+    except ValueError as e:
+        if "does not exist" in str(e):
+            # Create collection with the size of the current embedding
+            create_collection_if_not_exists(collection_name, len(vector))
+        else:
+            raise e
 
     point_id = str(uuid.uuid4())
     
@@ -169,15 +178,15 @@ def qdrant_store(text: str, metadata: Dict[str, Any], collection_name: str) -> s
         ]
     }
     
-    response = requests.put(
-        f"{QDRANT_URL}/collections/{collection_name}/points?wait=true",
+    response = _http_session.put(
+        f"{QDRANT_URL}/collections/{quote(collection_name)}/points?wait=true",
         json=point
     )
     
     if response.status_code != 200:
         raise Exception(f"Store failed: {response.text}")
         
-    return f"Stored in {collection_name} (size {target_size}) with ID: {point_id}"
+    return f"Stored in {collection_name} (size {len(vector)}) with ID: {point_id}"
 
 @mcp.tool()
 def qdrant_list_collections() -> List[Dict[str, Any]]:

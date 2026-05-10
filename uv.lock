@@ -1329,6 +1329,12 @@ dev = [
     { name = "pytest-mock" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+    { name = "pytest-mock" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "fastmcp", specifier = ">=0.4.1" },
@@ -1338,6 +1344,12 @@ requires-dist = [
     { name = "requests", specifier = ">=2.31.0" },
 ]
 provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pytest", specifier = ">=9.0.3" },
+    { name = "pytest-mock", specifier = ">=3.15.1" },
+]
 
 [[package]]
 name = "referencing"
