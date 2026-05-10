@@ -106,7 +106,7 @@ def create_collection_if_not_exists(collection_name: str, vector_size: int):
             raise Exception(f"Failed to create collection: {res.text}")
 
 @mcp.tool()
-def qdrant_search(query: str, collection_name: str, limit: int = 5) -> List[Dict[str, Any]]:
+def qdrant_search(query: str, collection_name: str, limit: int = 5, filter_metadata: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     vector = get_embedding(query)
     validate_qdrant_collection(collection_name, len(vector))
 
@@ -115,6 +115,16 @@ def qdrant_search(query: str, collection_name: str, limit: int = 5) -> List[Dict
         "limit": limit,
         "with_payload": True
     }
+    
+    if filter_metadata:
+        must_filters = []
+        for key, value in filter_metadata.items():
+            must_filters.append({
+                "key": key,
+                "match": {"value": value}
+            })
+        if must_filters:
+            search_payload["filter"] = {"must": must_filters}
     
     response = _http_session.post(
         f"{QDRANT_URL}/collections/{quote(collection_name)}/points/search",
