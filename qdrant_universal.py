@@ -199,6 +199,47 @@ def qdrant_store(text: str, metadata: Dict[str, Any], collection_name: str) -> s
     return f"Stored in {collection_name} (size {len(vector)}) with ID: {point_id}"
 
 @mcp.tool()
+def qdrant_list_symbols(collection_name: str, file_path: Optional[str] = None) -> List[Dict[str, str]]:
+    """
+    List unique symbols (functions, classes) found in a collection.
+    Optionally filter by file_path.
+    """
+    payload = {
+        "limit": 1000,
+        "with_payload": ["symbol_name", "symbol_type", "file_path"],
+        "with_vectors": False
+    }
+    
+    if file_path:
+        payload["filter"] = {
+            "must": [{"key": "file_path", "match": {"value": file_path}}]
+        }
+        
+    response = _http_session.post(
+        f"{QDRANT_URL}/collections/{quote(collection_name)}/points/scroll",
+        json=payload
+    )
+    
+    if response.status_code != 200:
+        raise Exception(f"Failed to list symbols: {response.text}")
+        
+    points = response.json().get("result", {}).get("points", [])
+    
+    symbols = []
+    seen = set()
+    for p in points:
+        payload = p.get("payload", {})
+        name = payload.get("symbol_name")
+        stype = payload.get("symbol_type")
+        if name and stype:
+            key = (name, stype)
+            if key not in seen:
+                seen.add(key)
+                symbols.append({"symbol_name": name, "symbol_type": stype})
+                
+    return symbols
+
+@mcp.tool()
 def qdrant_list_collections() -> List[Dict[str, Any]]:
     """List all collections in Qdrant with their metadata."""
     response = requests.get(
