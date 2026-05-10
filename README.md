@@ -35,14 +35,23 @@ Most MCP servers for Qdrant are either too rigid (hardcoded dimensions) or too s
 - **Zero-Configuration Collections**: Just call `qdrant_store` on a new collection name. The server will generate an embedding, detect its dimensions, and create the collection automatically.
 - **Universal Embedding Proxy**: Works with any OpenAI-compatible API (OpenAI, DashScope, Ollama/vLLM).
 - **Search Integrity**: Enforces strict dimension checks. No destructive zero-padding.
-- **Agentic Visibility**: Includes introspection tools (`qdrant_list_collections`, `qdrant_scroll`) so LLMs can discover data structures autonomously.
+- **AST-Aware Retrieval**: Integrated with `Qdrant Sentinel` to understand code structure (classes, functions, chunks).
+- **Agentic Visibility**: Includes introspection tools (`qdrant_list_collections`, `qdrant_scroll`, `qdrant_list_symbols`) so LLMs can discover data structures autonomously.
 
 ## Tools
 
-- `qdrant_search`: Search for similar texts in a collection.
-- `qdrant_store`: Store text and metadata in a collection (creates collection if missing).
+### 🔍 Discovery & Introspection
 - `qdrant_list_collections`: List all available collections and their stats.
-- `qdrant_scroll`: Browse through points in a collection.
+- `qdrant_list_symbols`: List unique symbols (classes, functions) in a collection, optionally filtered by `file_path`.
+- `qdrant_scroll`: Browse through points/chunks in a collection.
+
+### 🧠 Retrieval & Search
+- `qdrant_search`: Search for similar texts. Supports `filter_metadata` (e.g., `{"language": "python", "symbol_type": "class"}`).
+- `qdrant_get_symbol_code`: Reconstructs the full source code of a symbol from its distributed chunks.
+
+### 💾 Management
+- `qdrant_store`: Store text and metadata in a collection (creates collection if missing).
+- `qdrant_optimize_collection`: Creates payload indexes for metadata fields to ensure blazing fast filtered searches.
 
 ## Prerequisites
 
