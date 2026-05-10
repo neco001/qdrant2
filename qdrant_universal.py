@@ -280,6 +280,31 @@ def qdrant_list_symbols(collection_name: str, file_path: Optional[str] = None) -
     return symbols
 
 @mcp.tool()
+def qdrant_optimize_collection(collection_name: str) -> str:
+    """
+    Optimize a collection by creating payload indexes on metadata fields.
+    This ensures fast filtering by language, symbol_type, file_path, and symbol_name.
+    """
+    fields = ["language", "symbol_type", "file_path", "symbol_name"]
+    results = []
+    
+    for field in fields:
+        payload = {
+            "field_name": field,
+            "field_schema": "keyword"
+        }
+        response = _http_session.put(
+            f"{QDRANT_URL}/collections/{quote(collection_name)}/index",
+            json=payload
+        )
+        if response.status_code == 200:
+            results.append(f"Indexed {field}")
+        else:
+            results.append(f"Failed {field}: {response.text}")
+            
+    return "\n".join(results)
+
+@mcp.tool()
 def qdrant_list_collections() -> List[Dict[str, Any]]:
     """List all collections in Qdrant with their metadata."""
     response = requests.get(
