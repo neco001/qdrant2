@@ -2,10 +2,33 @@ import os
 import requests
 import uuid
 import threading
+import re
 from urllib.parse import quote
 from typing import Dict, Any, List, Optional
 from openai import OpenAI
 from fastmcp import FastMCP
+
+
+def normalize_file_path_for_qdrant(raw_path: str) -> str:
+    """Normalize file path for Qdrant storage by replacing forward slashes with backslashes and collapsing multiple separators."""
+    if raw_path is None:
+        return raw_path
+    
+    raw_path = raw_path.strip()
+    if raw_path == "":
+        return raw_path
+    
+    # Replace all forward slashes with backslashes
+    normalized = raw_path.replace("/", "\\")
+    
+    # Collapse multiple consecutive backslashes into a single backslash
+    # Preserve leading double-backslash for UNC paths
+    if normalized.startswith("\\\\"):
+        normalized = "\\\\" + re.sub(r"\\+", r"\\", normalized[2:])
+    else:
+        normalized = re.sub(r"\\+", r"\\", normalized)
+    
+    return normalized
 
 # Initialize FastMCP
 mcp = FastMCP("Qdrant Universal")
@@ -208,7 +231,7 @@ def qdrant_get_symbol_code(collection_name: str, symbol_name: str, file_path: st
         "filter": {
             "must": [
                 {"key": "symbol_name", "match": {"value": symbol_name}},
-                {"key": "file_path", "match": {"value": file_path}}
+                {"key": "file_path", "match": {"value": normalize_file_path_for_qdrant(file_path)}}
             ]
         },
         "with_payload": True,
@@ -251,8 +274,9 @@ def qdrant_list_symbols(collection_name: str, file_path: Optional[str] = None) -
     }
     
     if file_path:
+        normalized_path = normalize_file_path_for_qdrant(file_path)
         payload["filter"] = {
-            "must": [{"key": "file_path", "match": {"value": file_path}}]
+            "must": [{"key": "file_path", "match": {"value": normalized_path}}]
         }
         
     response = _http_session.post(
