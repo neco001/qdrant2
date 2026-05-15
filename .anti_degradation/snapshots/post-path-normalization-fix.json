@@ -1,0 +1,1161 @@
+{
+  "timestamp": "2026-05-15T19:30:33.387229Z",
+  "project_dir": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2",
+  "files": {
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py": {
+      "functions": [
+        {
+          "name": "normalize_file_path_for_qdrant",
+          "signature": "normalize_file_path_for_qdrant(raw_path)",
+          "lineno": 12,
+          "docstring": "Normalize file path for Qdrant storage by replacing forward slashes with backslashes and collapsing multiple separators.",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+        },
+        {
+          "name": "get_openai_client",
+          "signature": "get_openai_client()",
+          "lineno": 48,
+          "docstring": "Lazy initialization of the OpenAI client.",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+        },
+        {
+          "name": "get_embedding",
+          "signature": "get_embedding(text)",
+          "lineno": 62,
+          "docstring": "Get embedding for text using OpenAI-compatible API.",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+        },
+        {
+          "name": "get_collection_size",
+          "signature": "get_collection_size(collection_name)",
+          "lineno": 73,
+          "docstring": "Fetch the expected vector size for a collection from Qdrant. Returns None if collection doesn't exist.",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+        },
+        {
+          "name": "validate_qdrant_collection",
+          "signature": "validate_qdrant_collection(collection_name, expected_size)",
+          "lineno": 93,
+          "docstring": "Checks if the Qdrant collection exists and its vector size matches expected_size.\nRaises ValueError if validation fails.",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+        },
+        {
+          "name": "create_collection_if_not_exists",
+          "signature": "create_collection_if_not_exists(collection_name, vector_size)",
+          "lineno": 108,
+          "docstring": "Create Qdrant collection if it doesn't exist with specified vector size.",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+        },
+        {
+          "name": "qdrant_search",
+          "signature": "qdrant_search(query, collection_name, limit, filter_metadata)",
+          "lineno": 132,
+          "docstring": null,
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+        },
+        {
+          "name": "qdrant_scroll",
+          "signature": "qdrant_scroll(collection_name, limit, offset)",
+          "lineno": 163,
+          "docstring": "Scroll through records in a Qdrant collection (introspection tool).",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+        },
+        {
+          "name": "qdrant_store",
+          "signature": "qdrant_store(text, metadata, collection_name)",
+          "lineno": 184,
+          "docstring": null,
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+        },
+        {
+          "name": "qdrant_get_symbol_code",
+          "signature": "qdrant_get_symbol_code(collection_name, symbol_name, file_path)",
+          "lineno": 225,
+          "docstring": "Reconstruct the full source code for a symbol by fetching and ordering its chunks.",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+        },
+        {
+          "name": "qdrant_list_symbols",
+          "signature": "qdrant_list_symbols(collection_name, file_path)",
+          "lineno": 265,
+          "docstring": "List unique symbols (functions, classes) found in a collection.\nOptionally filter by file_path.",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+        },
+        {
+          "name": "qdrant_optimize_collection",
+          "signature": "qdrant_optimize_collection(collection_name)",
+          "lineno": 307,
+          "docstring": "Optimize a collection by creating payload indexes on metadata fields.\nThis ensures fast filtering by language, symbol_type, file_path, and symbol_name.",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+        },
+        {
+          "name": "qdrant_list_collections",
+          "signature": "qdrant_list_collections()",
+          "lineno": 332,
+          "docstring": "List all collections in Qdrant with their metadata.",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "os",
+          "alias": null
+        },
+        {
+          "module": "requests",
+          "alias": null
+        },
+        {
+          "module": "uuid",
+          "alias": null
+        },
+        {
+          "module": "threading",
+          "alias": null
+        },
+        {
+          "module": "re",
+          "alias": null
+        },
+        {
+          "module": "urllib.parse",
+          "names": [
+            "quote"
+          ]
+        },
+        {
+          "module": "typing",
+          "names": [
+            "Dict",
+            "Any",
+            "List",
+            "Optional"
+          ]
+        },
+        {
+          "module": "openai",
+          "names": [
+            "OpenAI"
+          ]
+        },
+        {
+          "module": "fastmcp",
+          "names": [
+            "FastMCP"
+          ]
+        }
+      ]
+    },
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_config_sync.py": {
+      "functions": [
+        {
+          "name": "test_embedding_base_url_default",
+          "signature": "test_embedding_base_url_default()",
+          "lineno": 9,
+          "docstring": "Test that EMBEDDING_BASE_URL defaults correctly when not set",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_config_sync.py"
+        },
+        {
+          "name": "test_get_openai_client_custom_config",
+          "signature": "test_get_openai_client_custom_config()",
+          "lineno": 18,
+          "docstring": "Test that get_openai_client uses correct base_url and api_key",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_config_sync.py"
+        },
+        {
+          "name": "test_validate_qdrant_collection_matching_size",
+          "signature": "test_validate_qdrant_collection_matching_size()",
+          "lineno": 35,
+          "docstring": "Test that validation passes when vector sizes match",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_config_sync.py"
+        },
+        {
+          "name": "test_validate_qdrant_collection_mismatched_size",
+          "signature": "test_validate_qdrant_collection_mismatched_size()",
+          "lineno": 56,
+          "docstring": "Test that validation raises error when vector sizes don't match",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_config_sync.py"
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "os",
+          "alias": null
+        },
+        {
+          "module": "unittest.mock",
+          "names": [
+            "patch",
+            "MagicMock"
+          ]
+        },
+        {
+          "module": "pytest",
+          "alias": null
+        },
+        {
+          "module": "openai",
+          "names": [
+            "OpenAI"
+          ]
+        }
+      ]
+    },
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_integration_flow.py": {
+      "functions": [
+        {
+          "name": "mock_session",
+          "signature": "mock_session()",
+          "lineno": 6,
+          "docstring": null,
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_integration_flow.py"
+        },
+        {
+          "name": "test_full_retrieval_flow",
+          "signature": "test_full_retrieval_flow(mock_session)",
+          "lineno": 10,
+          "docstring": "Integration-style test for the full flow:\n1. Verify qdrant_store calls Qdrant properly.\n2. Verify qdrant_search works with filters.\n3. Verify qdrant_get_symbol_code reconstructs correctly.",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_integration_flow.py"
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "pytest",
+          "alias": null
+        },
+        {
+          "module": "unittest.mock",
+          "names": [
+            "Mock",
+            "patch"
+          ]
+        },
+        {
+          "module": "qdrant_universal",
+          "names": [
+            "qdrant_store",
+            "qdrant_search",
+            "qdrant_get_symbol_code"
+          ]
+        }
+      ]
+    },
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_list_symbols.py": {
+      "functions": [
+        {
+          "name": "mock_session",
+          "signature": "mock_session()",
+          "lineno": 6,
+          "docstring": null,
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_list_symbols.py"
+        },
+        {
+          "name": "test_qdrant_list_symbols_exists_and_calls_scroll",
+          "signature": "test_qdrant_list_symbols_exists_and_calls_scroll(mock_session)",
+          "lineno": 10,
+          "docstring": "Test that qdrant_list_symbols calls the scroll API.",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_list_symbols.py"
+        },
+        {
+          "name": "test_qdrant_list_symbols_with_filter",
+          "signature": "test_qdrant_list_symbols_with_filter(mock_session)",
+          "lineno": 39,
+          "docstring": "Test that file_path filter is applied if provided.",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_list_symbols.py"
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "pytest",
+          "alias": null
+        },
+        {
+          "module": "unittest.mock",
+          "names": [
+            "Mock",
+            "patch"
+          ]
+        },
+        {
+          "module": "qdrant_universal",
+          "names": [
+            "qdrant_list_symbols"
+          ]
+        }
+      ]
+    },
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_optimize_indexing.py": {
+      "functions": [
+        {
+          "name": "mock_session",
+          "signature": "mock_session()",
+          "lineno": 6,
+          "docstring": null,
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_optimize_indexing.py"
+        },
+        {
+          "name": "test_qdrant_optimize_collection_calls_put_for_fields",
+          "signature": "test_qdrant_optimize_collection_calls_put_for_fields(mock_session)",
+          "lineno": 10,
+          "docstring": "Test that qdrant_optimize_collection calls PUT for all metadata fields.",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_optimize_indexing.py"
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "pytest",
+          "alias": null
+        },
+        {
+          "module": "unittest.mock",
+          "names": [
+            "Mock",
+            "patch"
+          ]
+        },
+        {
+          "module": "qdrant_universal",
+          "names": [
+            "qdrant_optimize_collection"
+          ]
+        }
+      ]
+    },
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_path_normalization.py": {
+      "functions": [],
+      "classes": [
+        {
+          "name": "TestNormalizeFilePathForQdrant",
+          "lineno": 6,
+          "docstring": "Test suite for normalize_file_path_for_qdrant() function.",
+          "methods": [
+            {
+              "name": "test_none_input_returns_none",
+              "signature": "test_none_input_returns_none(self)",
+              "lineno": 9
+            },
+            {
+              "name": "test_empty_string_returns_empty",
+              "signature": "test_empty_string_returns_empty(self)",
+              "lineno": 13
+            },
+            {
+              "name": "test_forward_slashes_converted_to_backslashes",
+              "signature": "test_forward_slashes_converted_to_backslashes(self)",
+              "lineno": 17
+            },
+            {
+              "name": "test_multiple_forward_slashes_converted",
+              "signature": "test_multiple_forward_slashes_converted(self)",
+              "lineno": 21
+            },
+            {
+              "name": "test_backslashes_preserved",
+              "signature": "test_backslashes_preserved(self)",
+              "lineno": 25
+            },
+            {
+              "name": "test_mixed_slashes_normalized",
+              "signature": "test_mixed_slashes_normalized(self)",
+              "lineno": 29
+            },
+            {
+              "name": "test_multiple_consecutive_backslashes_collapsed",
+              "signature": "test_multiple_consecutive_backslashes_collapsed(self)",
+              "lineno": 33
+            },
+            {
+              "name": "test_multiple_consecutive_mixed_slashes_collapsed",
+              "signature": "test_multiple_consecutive_mixed_slashes_collapsed(self)",
+              "lineno": 37
+            },
+            {
+              "name": "test_leading_trailing_whitespace_stripped",
+              "signature": "test_leading_trailing_whitespace_stripped(self)",
+              "lineno": 41
+            },
+            {
+              "name": "test_windows_absolute_path_normalized",
+              "signature": "test_windows_absolute_path_normalized(self)",
+              "lineno": 45
+            },
+            {
+              "name": "test_complex_path_normalized",
+              "signature": "test_complex_path_normalized(self)",
+              "lineno": 50
+            },
+            {
+              "name": "test_normalize_unc_path",
+              "signature": "test_normalize_unc_path(self)",
+              "lineno": 55
+            },
+            {
+              "name": "test_normalize_unc_path_with_forward_slashes",
+              "signature": "test_normalize_unc_path_with_forward_slashes(self)",
+              "lineno": 60
+            },
+            {
+              "name": "test_normalize_whitespace_only",
+              "signature": "test_normalize_whitespace_only(self)",
+              "lineno": 65
+            }
+          ],
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_path_normalization.py"
+        }
+      ],
+      "imports": [
+        {
+          "module": "pytest",
+          "alias": null
+        },
+        {
+          "module": "qdrant_universal",
+          "names": [
+            "normalize_file_path_for_qdrant"
+          ]
+        }
+      ]
+    },
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_qdrant_list_collections.py": {
+      "functions": [
+        {
+          "name": "test_qdrant_list_collections_success",
+          "signature": "test_qdrant_list_collections_success()",
+          "lineno": 6,
+          "docstring": "Test successful retrieval of collections from Qdrant API",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_qdrant_list_collections.py"
+        },
+        {
+          "name": "test_qdrant_list_collections_api_error",
+          "signature": "test_qdrant_list_collections_api_error()",
+          "lineno": 48,
+          "docstring": "Test that exception is raised when API returns non-200 status",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_qdrant_list_collections.py"
+        },
+        {
+          "name": "test_qdrant_list_collections_empty_collections",
+          "signature": "test_qdrant_list_collections_empty_collections()",
+          "lineno": 57,
+          "docstring": "Test behavior when no collections exist",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_qdrant_list_collections.py"
+        },
+        {
+          "name": "test_qdrant_list_collections_partial_failure",
+          "signature": "test_qdrant_list_collections_partial_failure()",
+          "lineno": 66,
+          "docstring": "Test handling when some detail requests fail",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_qdrant_list_collections.py"
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "pytest",
+          "alias": null
+        },
+        {
+          "module": "requests",
+          "alias": null
+        },
+        {
+          "module": "unittest.mock",
+          "names": [
+            "patch",
+            "Mock"
+          ]
+        },
+        {
+          "module": "qdrant_universal",
+          "names": [
+            "qdrant_list_collections"
+          ]
+        }
+      ]
+    },
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_qdrant_live.py": {
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "module": "requests",
+          "alias": null
+        },
+        {
+          "module": "json",
+          "alias": null
+        }
+      ]
+    },
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_reconstruct_symbol.py": {
+      "functions": [
+        {
+          "name": "mock_session",
+          "signature": "mock_session()",
+          "lineno": 6,
+          "docstring": null,
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_reconstruct_symbol.py"
+        },
+        {
+          "name": "test_qdrant_get_symbol_code_reconstructs_correctly",
+          "signature": "test_qdrant_get_symbol_code_reconstructs_correctly(mock_session)",
+          "lineno": 10,
+          "docstring": "Test that qdrant_get_symbol_code reconstructs code from sorted chunks.",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_reconstruct_symbol.py"
+        },
+        {
+          "name": "test_qdrant_get_symbol_code_empty",
+          "signature": "test_qdrant_get_symbol_code_empty(mock_session)",
+          "lineno": 65,
+          "docstring": "Test behavior when no chunks are found.",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_reconstruct_symbol.py"
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "pytest",
+          "alias": null
+        },
+        {
+          "module": "unittest.mock",
+          "names": [
+            "Mock",
+            "patch"
+          ]
+        },
+        {
+          "module": "qdrant_universal",
+          "names": [
+            "qdrant_get_symbol_code"
+          ]
+        }
+      ]
+    },
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_search_filter.py": {
+      "functions": [
+        {
+          "name": "mock_globals",
+          "signature": "mock_globals()",
+          "lineno": 6,
+          "docstring": null,
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_search_filter.py"
+        },
+        {
+          "name": "test_qdrant_search_accepts_filter_metadata",
+          "signature": "test_qdrant_search_accepts_filter_metadata(mock_globals)",
+          "lineno": 13,
+          "docstring": "Test that qdrant_search accepts filter_metadata parameter",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_search_filter.py"
+        },
+        {
+          "name": "test_qdrant_search_without_filter_metadata",
+          "signature": "test_qdrant_search_without_filter_metadata(mock_globals)",
+          "lineno": 51,
+          "docstring": "Test that qdrant_search works without filter_metadata (backward compatibility)",
+          "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_search_filter.py"
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "pytest",
+          "alias": null
+        },
+        {
+          "module": "unittest.mock",
+          "names": [
+            "Mock",
+            "patch"
+          ]
+        },
+        {
+          "module": "qdrant_universal",
+          "names": [
+            "qdrant_search"
+          ]
+        }
+      ]
+    }
+  },
+  "functions": [
+    {
+      "name": "normalize_file_path_for_qdrant",
+      "signature": "normalize_file_path_for_qdrant(raw_path)",
+      "lineno": 12,
+      "docstring": "Normalize file path for Qdrant storage by replacing forward slashes with backslashes and collapsing multiple separators.",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+    },
+    {
+      "name": "get_openai_client",
+      "signature": "get_openai_client()",
+      "lineno": 48,
+      "docstring": "Lazy initialization of the OpenAI client.",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+    },
+    {
+      "name": "get_embedding",
+      "signature": "get_embedding(text)",
+      "lineno": 62,
+      "docstring": "Get embedding for text using OpenAI-compatible API.",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+    },
+    {
+      "name": "get_collection_size",
+      "signature": "get_collection_size(collection_name)",
+      "lineno": 73,
+      "docstring": "Fetch the expected vector size for a collection from Qdrant. Returns None if collection doesn't exist.",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+    },
+    {
+      "name": "validate_qdrant_collection",
+      "signature": "validate_qdrant_collection(collection_name, expected_size)",
+      "lineno": 93,
+      "docstring": "Checks if the Qdrant collection exists and its vector size matches expected_size.\nRaises ValueError if validation fails.",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+    },
+    {
+      "name": "create_collection_if_not_exists",
+      "signature": "create_collection_if_not_exists(collection_name, vector_size)",
+      "lineno": 108,
+      "docstring": "Create Qdrant collection if it doesn't exist with specified vector size.",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+    },
+    {
+      "name": "qdrant_search",
+      "signature": "qdrant_search(query, collection_name, limit, filter_metadata)",
+      "lineno": 132,
+      "docstring": null,
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+    },
+    {
+      "name": "qdrant_scroll",
+      "signature": "qdrant_scroll(collection_name, limit, offset)",
+      "lineno": 163,
+      "docstring": "Scroll through records in a Qdrant collection (introspection tool).",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+    },
+    {
+      "name": "qdrant_store",
+      "signature": "qdrant_store(text, metadata, collection_name)",
+      "lineno": 184,
+      "docstring": null,
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+    },
+    {
+      "name": "qdrant_get_symbol_code",
+      "signature": "qdrant_get_symbol_code(collection_name, symbol_name, file_path)",
+      "lineno": 225,
+      "docstring": "Reconstruct the full source code for a symbol by fetching and ordering its chunks.",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+    },
+    {
+      "name": "qdrant_list_symbols",
+      "signature": "qdrant_list_symbols(collection_name, file_path)",
+      "lineno": 265,
+      "docstring": "List unique symbols (functions, classes) found in a collection.\nOptionally filter by file_path.",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+    },
+    {
+      "name": "qdrant_optimize_collection",
+      "signature": "qdrant_optimize_collection(collection_name)",
+      "lineno": 307,
+      "docstring": "Optimize a collection by creating payload indexes on metadata fields.\nThis ensures fast filtering by language, symbol_type, file_path, and symbol_name.",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+    },
+    {
+      "name": "qdrant_list_collections",
+      "signature": "qdrant_list_collections()",
+      "lineno": 332,
+      "docstring": "List all collections in Qdrant with their metadata.",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\qdrant_universal.py"
+    },
+    {
+      "name": "test_embedding_base_url_default",
+      "signature": "test_embedding_base_url_default()",
+      "lineno": 9,
+      "docstring": "Test that EMBEDDING_BASE_URL defaults correctly when not set",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_config_sync.py"
+    },
+    {
+      "name": "test_get_openai_client_custom_config",
+      "signature": "test_get_openai_client_custom_config()",
+      "lineno": 18,
+      "docstring": "Test that get_openai_client uses correct base_url and api_key",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_config_sync.py"
+    },
+    {
+      "name": "test_validate_qdrant_collection_matching_size",
+      "signature": "test_validate_qdrant_collection_matching_size()",
+      "lineno": 35,
+      "docstring": "Test that validation passes when vector sizes match",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_config_sync.py"
+    },
+    {
+      "name": "test_validate_qdrant_collection_mismatched_size",
+      "signature": "test_validate_qdrant_collection_mismatched_size()",
+      "lineno": 56,
+      "docstring": "Test that validation raises error when vector sizes don't match",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_config_sync.py"
+    },
+    {
+      "name": "mock_session",
+      "signature": "mock_session()",
+      "lineno": 6,
+      "docstring": null,
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_integration_flow.py"
+    },
+    {
+      "name": "test_full_retrieval_flow",
+      "signature": "test_full_retrieval_flow(mock_session)",
+      "lineno": 10,
+      "docstring": "Integration-style test for the full flow:\n1. Verify qdrant_store calls Qdrant properly.\n2. Verify qdrant_search works with filters.\n3. Verify qdrant_get_symbol_code reconstructs correctly.",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_integration_flow.py"
+    },
+    {
+      "name": "mock_session",
+      "signature": "mock_session()",
+      "lineno": 6,
+      "docstring": null,
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_list_symbols.py"
+    },
+    {
+      "name": "test_qdrant_list_symbols_exists_and_calls_scroll",
+      "signature": "test_qdrant_list_symbols_exists_and_calls_scroll(mock_session)",
+      "lineno": 10,
+      "docstring": "Test that qdrant_list_symbols calls the scroll API.",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_list_symbols.py"
+    },
+    {
+      "name": "test_qdrant_list_symbols_with_filter",
+      "signature": "test_qdrant_list_symbols_with_filter(mock_session)",
+      "lineno": 39,
+      "docstring": "Test that file_path filter is applied if provided.",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_list_symbols.py"
+    },
+    {
+      "name": "mock_session",
+      "signature": "mock_session()",
+      "lineno": 6,
+      "docstring": null,
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_optimize_indexing.py"
+    },
+    {
+      "name": "test_qdrant_optimize_collection_calls_put_for_fields",
+      "signature": "test_qdrant_optimize_collection_calls_put_for_fields(mock_session)",
+      "lineno": 10,
+      "docstring": "Test that qdrant_optimize_collection calls PUT for all metadata fields.",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_optimize_indexing.py"
+    },
+    {
+      "name": "test_qdrant_list_collections_success",
+      "signature": "test_qdrant_list_collections_success()",
+      "lineno": 6,
+      "docstring": "Test successful retrieval of collections from Qdrant API",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_qdrant_list_collections.py"
+    },
+    {
+      "name": "test_qdrant_list_collections_api_error",
+      "signature": "test_qdrant_list_collections_api_error()",
+      "lineno": 48,
+      "docstring": "Test that exception is raised when API returns non-200 status",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_qdrant_list_collections.py"
+    },
+    {
+      "name": "test_qdrant_list_collections_empty_collections",
+      "signature": "test_qdrant_list_collections_empty_collections()",
+      "lineno": 57,
+      "docstring": "Test behavior when no collections exist",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_qdrant_list_collections.py"
+    },
+    {
+      "name": "test_qdrant_list_collections_partial_failure",
+      "signature": "test_qdrant_list_collections_partial_failure()",
+      "lineno": 66,
+      "docstring": "Test handling when some detail requests fail",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_qdrant_list_collections.py"
+    },
+    {
+      "name": "mock_session",
+      "signature": "mock_session()",
+      "lineno": 6,
+      "docstring": null,
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_reconstruct_symbol.py"
+    },
+    {
+      "name": "test_qdrant_get_symbol_code_reconstructs_correctly",
+      "signature": "test_qdrant_get_symbol_code_reconstructs_correctly(mock_session)",
+      "lineno": 10,
+      "docstring": "Test that qdrant_get_symbol_code reconstructs code from sorted chunks.",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_reconstruct_symbol.py"
+    },
+    {
+      "name": "test_qdrant_get_symbol_code_empty",
+      "signature": "test_qdrant_get_symbol_code_empty(mock_session)",
+      "lineno": 65,
+      "docstring": "Test behavior when no chunks are found.",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_reconstruct_symbol.py"
+    },
+    {
+      "name": "mock_globals",
+      "signature": "mock_globals()",
+      "lineno": 6,
+      "docstring": null,
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_search_filter.py"
+    },
+    {
+      "name": "test_qdrant_search_accepts_filter_metadata",
+      "signature": "test_qdrant_search_accepts_filter_metadata(mock_globals)",
+      "lineno": 13,
+      "docstring": "Test that qdrant_search accepts filter_metadata parameter",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_search_filter.py"
+    },
+    {
+      "name": "test_qdrant_search_without_filter_metadata",
+      "signature": "test_qdrant_search_without_filter_metadata(mock_globals)",
+      "lineno": 51,
+      "docstring": "Test that qdrant_search works without filter_metadata (backward compatibility)",
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_search_filter.py"
+    }
+  ],
+  "classes": [
+    {
+      "name": "TestNormalizeFilePathForQdrant",
+      "lineno": 6,
+      "docstring": "Test suite for normalize_file_path_for_qdrant() function.",
+      "methods": [
+        {
+          "name": "test_none_input_returns_none",
+          "signature": "test_none_input_returns_none(self)",
+          "lineno": 9
+        },
+        {
+          "name": "test_empty_string_returns_empty",
+          "signature": "test_empty_string_returns_empty(self)",
+          "lineno": 13
+        },
+        {
+          "name": "test_forward_slashes_converted_to_backslashes",
+          "signature": "test_forward_slashes_converted_to_backslashes(self)",
+          "lineno": 17
+        },
+        {
+          "name": "test_multiple_forward_slashes_converted",
+          "signature": "test_multiple_forward_slashes_converted(self)",
+          "lineno": 21
+        },
+        {
+          "name": "test_backslashes_preserved",
+          "signature": "test_backslashes_preserved(self)",
+          "lineno": 25
+        },
+        {
+          "name": "test_mixed_slashes_normalized",
+          "signature": "test_mixed_slashes_normalized(self)",
+          "lineno": 29
+        },
+        {
+          "name": "test_multiple_consecutive_backslashes_collapsed",
+          "signature": "test_multiple_consecutive_backslashes_collapsed(self)",
+          "lineno": 33
+        },
+        {
+          "name": "test_multiple_consecutive_mixed_slashes_collapsed",
+          "signature": "test_multiple_consecutive_mixed_slashes_collapsed(self)",
+          "lineno": 37
+        },
+        {
+          "name": "test_leading_trailing_whitespace_stripped",
+          "signature": "test_leading_trailing_whitespace_stripped(self)",
+          "lineno": 41
+        },
+        {
+          "name": "test_windows_absolute_path_normalized",
+          "signature": "test_windows_absolute_path_normalized(self)",
+          "lineno": 45
+        },
+        {
+          "name": "test_complex_path_normalized",
+          "signature": "test_complex_path_normalized(self)",
+          "lineno": 50
+        },
+        {
+          "name": "test_normalize_unc_path",
+          "signature": "test_normalize_unc_path(self)",
+          "lineno": 55
+        },
+        {
+          "name": "test_normalize_unc_path_with_forward_slashes",
+          "signature": "test_normalize_unc_path_with_forward_slashes(self)",
+          "lineno": 60
+        },
+        {
+          "name": "test_normalize_whitespace_only",
+          "signature": "test_normalize_whitespace_only(self)",
+          "lineno": 65
+        }
+      ],
+      "file": "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_path_normalization.py"
+    }
+  ],
+  "mappings": {
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_config_sync.py:test_validate_qdrant_collection_matching_size": [
+      "validate_qdrant_collection"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_config_sync.py:test_validate_qdrant_collection_mismatched_size": [
+      "validate_qdrant_collection"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_integration_flow.py:test_full_retrieval_flow": [
+      "qdrant_get_symbol_code",
+      "qdrant_store",
+      "qdrant_search"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_list_symbols.py:test_qdrant_list_symbols_exists_and_calls_scroll": [
+      "qdrant_list_symbols"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_list_symbols.py:test_qdrant_list_symbols_with_filter": [
+      "qdrant_list_symbols"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_optimize_indexing.py:test_qdrant_optimize_collection_calls_put_for_fields": [
+      "qdrant_optimize_collection"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_path_normalization.py:test_windows_absolute_path_normalized": [
+      "normalize_file_path_for_qdrant"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_path_normalization.py:test_complex_path_normalized": [
+      "normalize_file_path_for_qdrant"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_path_normalization.py:test_normalize_unc_path": [
+      "normalize_file_path_for_qdrant"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_path_normalization.py:test_normalize_unc_path_with_forward_slashes": [
+      "normalize_file_path_for_qdrant"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_path_normalization.py:test_none_input_returns_none": [
+      "normalize_file_path_for_qdrant"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_path_normalization.py:test_empty_string_returns_empty": [
+      "normalize_file_path_for_qdrant"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_path_normalization.py:test_forward_slashes_converted_to_backslashes": [
+      "normalize_file_path_for_qdrant"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_path_normalization.py:test_multiple_forward_slashes_converted": [
+      "normalize_file_path_for_qdrant"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_path_normalization.py:test_backslashes_preserved": [
+      "normalize_file_path_for_qdrant"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_path_normalization.py:test_mixed_slashes_normalized": [
+      "normalize_file_path_for_qdrant"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_path_normalization.py:test_multiple_consecutive_backslashes_collapsed": [
+      "normalize_file_path_for_qdrant"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_path_normalization.py:test_multiple_consecutive_mixed_slashes_collapsed": [
+      "normalize_file_path_for_qdrant"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_path_normalization.py:test_leading_trailing_whitespace_stripped": [
+      "normalize_file_path_for_qdrant"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_path_normalization.py:test_normalize_whitespace_only": [
+      "normalize_file_path_for_qdrant"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_qdrant_list_collections.py:test_qdrant_list_collections_success": [
+      "qdrant_list_collections"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_qdrant_list_collections.py:test_qdrant_list_collections_empty_collections": [
+      "qdrant_list_collections"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_qdrant_list_collections.py:test_qdrant_list_collections_partial_failure": [
+      "qdrant_list_collections"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_qdrant_list_collections.py:test_qdrant_list_collections_api_error": [
+      "qdrant_list_collections"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_reconstruct_symbol.py:test_qdrant_get_symbol_code_reconstructs_correctly": [
+      "qdrant_get_symbol_code"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_reconstruct_symbol.py:test_qdrant_get_symbol_code_empty": [
+      "qdrant_get_symbol_code"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_search_filter.py:test_qdrant_search_accepts_filter_metadata": [
+      "qdrant_search"
+    ],
+    "C:\\Repos\\_Toolbox\\mcp_servers\\qdrant2\\tests\\test_search_filter.py:test_qdrant_search_without_filter_metadata": [
+      "qdrant_search"
+    ]
+  },
+  "content_hashes": [
+    {
+      "file_path": "qdrant_universal.py",
+      "hash_value": "9df13f5aee7bf5127fcd679eacd99255d93a69ae2351a2a0e384678101a1a83f",
+      "hash_algorithm": "sha256",
+      "semantic_markers": [
+        "func:normalize_file_path_for_qdrant",
+        "func:get_openai_client",
+        "func:get_embedding",
+        "func:get_collection_size",
+        "func:validate_qdrant_collection",
+        "func:create_collection_if_not_exists",
+        "func:qdrant_search",
+        "func:qdrant_scroll",
+        "func:qdrant_store",
+        "func:qdrant_get_symbol_code",
+        "func:qdrant_list_symbols",
+        "func:qdrant_optimize_collection",
+        "func:qdrant_list_collections",
+        "import:os",
+        "import:requests",
+        "import:uuid",
+        "import:threading",
+        "import:re",
+        "import:urllib.parse",
+        "import:typing",
+        "import:openai",
+        "import:fastmcp"
+      ],
+      "created_at": "2026-05-15T19:30:33.643482Z"
+    },
+    {
+      "file_path": "tests\\test_config_sync.py",
+      "hash_value": "89f443d62525f3472acc8d01f55dcd3e1264caa48dadb18677a0e5efef311c4a",
+      "hash_algorithm": "sha256",
+      "semantic_markers": [
+        "func:test_embedding_base_url_default",
+        "func:test_get_openai_client_custom_config",
+        "func:test_validate_qdrant_collection_matching_size",
+        "func:test_validate_qdrant_collection_mismatched_size",
+        "import:os",
+        "import:unittest.mock",
+        "import:pytest",
+        "import:openai"
+      ],
+      "created_at": "2026-05-15T19:30:33.644875Z"
+    },
+    {
+      "file_path": "tests\\test_integration_flow.py",
+      "hash_value": "2ac06cdb9f6cc41274e6ffc90a637dcd375386cd907622bb0da4f09415d0c34e",
+      "hash_algorithm": "sha256",
+      "semantic_markers": [
+        "func:mock_session",
+        "func:test_full_retrieval_flow",
+        "import:pytest",
+        "import:unittest.mock",
+        "import:qdrant_universal"
+      ],
+      "created_at": "2026-05-15T19:30:33.645866Z"
+    },
+    {
+      "file_path": "tests\\test_list_symbols.py",
+      "hash_value": "8bfabd36d6b93ce579dcbb1dad083c9018c4f7692e114034f41872a7cfbb12f2",
+      "hash_algorithm": "sha256",
+      "semantic_markers": [
+        "func:mock_session",
+        "func:test_qdrant_list_symbols_exists_and_calls_scroll",
+        "func:test_qdrant_list_symbols_with_filter",
+        "import:pytest",
+        "import:unittest.mock",
+        "import:qdrant_universal"
+      ],
+      "created_at": "2026-05-15T19:30:33.647307Z"
+    },
+    {
+      "file_path": "tests\\test_optimize_indexing.py",
+      "hash_value": "8447f02a552049d5355503cdaa7940cdd98c008b0d516788c9a6410bf0fa1f86",
+      "hash_algorithm": "sha256",
+      "semantic_markers": [
+        "func:mock_session",
+        "func:test_qdrant_optimize_collection_calls_put_for_fields",
+        "import:pytest",
+        "import:unittest.mock",
+        "import:qdrant_universal"
+      ],
+      "created_at": "2026-05-15T19:30:33.648425Z"
+    },
+    {
+      "file_path": "tests\\test_path_normalization.py",
+      "hash_value": "ab142793872205d2c4e89470a9a7108d1eab0163a0e73b4d1b42d788aaa4d07d",
+      "hash_algorithm": "sha256",
+      "semantic_markers": [
+        "func:test_none_input_returns_none",
+        "func:test_empty_string_returns_empty",
+        "func:test_forward_slashes_converted_to_backslashes",
+        "func:test_multiple_forward_slashes_converted",
+        "func:test_backslashes_preserved",
+        "func:test_mixed_slashes_normalized",
+        "func:test_multiple_consecutive_backslashes_collapsed",
+        "func:test_multiple_consecutive_mixed_slashes_collapsed",
+        "func:test_leading_trailing_whitespace_stripped",
+        "func:test_windows_absolute_path_normalized",
+        "func:test_complex_path_normalized",
+        "func:test_normalize_unc_path",
+        "func:test_normalize_unc_path_with_forward_slashes",
+        "func:test_normalize_whitespace_only",
+        "class:TestNormalizeFilePathForQdrant",
+        "import:pytest",
+        "import:qdrant_universal"
+      ],
+      "created_at": "2026-05-15T19:30:33.649316Z"
+    },
+    {
+      "file_path": "tests\\test_qdrant_list_collections.py",
+      "hash_value": "e3ad1a7014de90b9946348a7fecbb4ae401202474bd71728bf4e8b68b6410f52",
+      "hash_algorithm": "sha256",
+      "semantic_markers": [
+        "func:test_qdrant_list_collections_success",
+        "func:test_qdrant_list_collections_api_error",
+        "func:test_qdrant_list_collections_empty_collections",
+        "func:test_qdrant_list_collections_partial_failure",
+        "import:pytest",
+        "import:requests",
+        "import:unittest.mock",
+        "import:qdrant_universal"
+      ],
+      "created_at": "2026-05-15T19:30:33.650487Z"
+    },
+    {
+      "file_path": "tests\\test_qdrant_live.py",
+      "hash_value": "6ab7bbf8b75707502d2f0c6b30f647a84a73e093814fbe7cddbae77835ce9b86",
+      "hash_algorithm": "sha256",
+      "semantic_markers": [
+        "import:requests",
+        "import:json"
+      ],
+      "created_at": "2026-05-15T19:30:33.651336Z"
+    },
+    {
+      "file_path": "tests\\test_reconstruct_symbol.py",
+      "hash_value": "80b200f509351500d5d697db3e90e3333a8056748b2735449b716c0da1c9d4fd",
+      "hash_algorithm": "sha256",
+      "semantic_markers": [
+        "func:mock_session",
+        "func:test_qdrant_get_symbol_code_reconstructs_correctly",
+        "func:test_qdrant_get_symbol_code_empty",
+        "import:pytest",
+        "import:unittest.mock",
+        "import:qdrant_universal"
+      ],
+      "created_at": "2026-05-15T19:30:33.652164Z"
+    },
+    {
+      "file_path": "tests\\test_search_filter.py",
+      "hash_value": "05e8a2f00f4c05c3dc0f501b3f84a97ce23d6ea3c6a042378e822519ca7949fd",
+      "hash_algorithm": "sha256",
+      "semantic_markers": [
+        "func:mock_globals",
+        "func:test_qdrant_search_accepts_filter_metadata",
+        "func:test_qdrant_search_without_filter_metadata",
+        "import:pytest",
+        "import:unittest.mock",
+        "import:qdrant_universal"
+      ],
+      "created_at": "2026-05-15T19:30:33.653014Z"
+    }
+  ],
+  "shadow_mode": false
+}

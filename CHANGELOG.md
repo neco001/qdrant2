@@ -1,5 +1,47 @@
 # CHANGELOG
 
+## SOS Sync - 2026-05-15 21:30:29
+
+## [2026-05-15 19:21:55] ee45d031-5583-49a9-bede-6633179d4356
+
+**Task**: Create normalize_file_path_for_qdrant() utility function
+
+**Advice**: Add a pure function at the top of qdrant_universal.py (after imports, before get_openai_client). Logic: replace '/' with '\', collapse multiple separators, strip whitespace. Handle None/empty inputs gracefully. This function will be used by both query and index functions.
+
+---
+
+## [2026-05-15 19:21:55] 2dd55ed7-0e86-4589-89a3-122e4dc6b97f
+
+**Task**: Apply normalization to qdrant_list_symbols file_path filter
+
+**Advice**: In qdrant_list_symbols (line 253), call normalize_file_path_for_qdrant(file_path) before constructing the filter payload. Only apply the filter if the normalized path is non-empty. No changes to function signature or return type.
+
+---
+
+## [2026-05-15 19:21:55] 06d6edc3-683f-48c1-87c4-1170b4ddaece
+
+**Task**: Apply normalization to qdrant_get_symbol_code file_path filter
+
+**Advice**: In qdrant_get_symbol_code (line 211), call normalize_file_path_for_qdrant(file_path) before constructing the must filter. Ensure the normalized value is used in the exact match condition. No changes to function signature or return type.
+
+---
+
+## [2026-05-15 19:21:55] bff84ecf-fd33-49ad-bb94-2be7a82406e6
+
+**Task**: Add unit tests for path normalization edge cases
+
+**Advice**: Create tests in tests/test_path_normalization.py covering: forward slash input matches backslash index, backslash input unchanged, mixed separators normalized correctly, None/empty inputs return as-is. Use pytest. Follow existing test patterns in the project.
+
+---
+
+## [2026-05-15 19:21:55] e10ce0d4-0dc5-458c-ac30-2566479b3723
+
+**Task**: Verify backward compatibility with existing queries
+
+**Advice**: Run qdrant_list_symbols and qdrant_get_symbol_code against project-secureexampdf collection with both forward-slash and backslash paths to confirm both work. Test with: tests/test_secure_memory.py and tests\test_secure_memory.py. Both should return the same symbols.
+
+---
+
 ## SOS Sync - 2026-05-04 16:57:35
 
 ## [2026-05-04 12:53:06] a5fcb252-6abe-41dd-b709-0cd442b6320e
