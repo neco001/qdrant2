@@ -4,31 +4,29 @@ import uuid
 import threading
 import re
 from urllib.parse import quote
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Union
 from openai import OpenAI
 from fastmcp import FastMCP
 
 
 def normalize_file_path_for_qdrant(raw_path: str) -> str:
-    """Normalize file path for Qdrant storage by replacing forward slashes with backslashes and collapsing multiple separators."""
+    """
+    Normalize file path for Qdrant storage.
+    
+    Only trims whitespace - does NOT convert path separators.
+    This ensures cross-platform compatibility where data may be stored
+    with forward slashes (Linux/Mac) or backslashes (Windows).
+    
+    Args:
+        raw_path: The file path to normalize
+        
+    Returns:
+        Trimmed path string, or None/empty string as-is
+    """
     if raw_path is None:
         return raw_path
     
-    raw_path = raw_path.strip()
-    if raw_path == "":
-        return raw_path
-    
-    # Replace all forward slashes with backslashes
-    normalized = raw_path.replace("/", "\\")
-    
-    # Collapse multiple consecutive backslashes into a single backslash
-    # Preserve leading double-backslash for UNC paths
-    if normalized.startswith("\\\\"):
-        normalized = "\\\\" + re.sub(r"\\+", r"\\", normalized[2:])
-    else:
-        normalized = re.sub(r"\\+", r"\\", normalized)
-    
-    return normalized
+    return raw_path.strip()
 
 # Initialize FastMCP
 mcp = FastMCP("Qdrant Universal")
@@ -129,9 +127,20 @@ def create_collection_if_not_exists(collection_name: str, vector_size: int):
             raise Exception(f"Failed to create collection: {res.text}")
 
 @mcp.tool()
-def qdrant_search(query: str, collection_name: str, limit: int = 5, filter_metadata: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+def qdrant_search(query: str, collection_name: str, limit: int = 5, filter_metadata: Any = None) -> List[Dict[str, Any]]:
+    if not query or not query.strip():
+        raise ValueError("query parameter cannot be empty or whitespace-only")
     vector = get_embedding(query)
     validate_qdrant_collection(collection_name, len(vector))
+
+    # Parse JSON string if passed (MCP framework serialization quirk)
+    parsed_filter: Optional[Dict[str, Any]] = None
+    if filter_metadata is not None:
+        import json
+        if isinstance(filter_metadata, str):
+            parsed_filter = json.loads(filter_metadata)
+        else:
+            parsed_filter = filter_metadata
 
     search_payload = {
         "vector": vector,
@@ -139,9 +148,9 @@ def qdrant_search(query: str, collection_name: str, limit: int = 5, filter_metad
         "with_payload": True
     }
     
-    if filter_metadata:
+    if parsed_filter:
         must_filters = []
-        for key, value in filter_metadata.items():
+        for key, value in parsed_filter.items():
             must_filters.append({
                 "key": key,
                 "match": {"value": value}
