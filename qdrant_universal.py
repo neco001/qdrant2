@@ -55,7 +55,7 @@ def read_qdrant_index(project_path: str) -> Optional[Dict[str, Any]]:
     except (tomllib.TOMLDecodeError, IOError) as e:
         logging.warning(f"Failed to parse qdrant_index.toml: {str(e)}")
         return None
-
+mcp = FastMCP("Qdrant Universal")
 @mcp.tool()
 def qdrant_find_collection(project_path: str, collection_query: str) -> Optional[str]:
     """
@@ -85,7 +85,6 @@ def qdrant_find_collection(project_path: str, collection_query: str) -> Optional
     return None
 
 # Initialize FastMCP
-mcp = FastMCP("Qdrant Universal")
 
 # Configuration from environment variables
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
