@@ -6,8 +6,13 @@ If you are an AI agent using this server, follow these protocols to maximize ret
 This server provides **Semantic Codebase Memory**. It works best when paired with **Qdrant Sentinel** (background indexer).
 
 ### 1. Identify Your Context
+Use 3-layer collection resolution to avoid redundant Qdrant HTTP calls:
+1. **Layer 1**: Check `qdrant_index.toml` (written by Qdrant Sentinel)
+2. **Layer 2**: Fallback to `QDRANT_DEFAULT_COLLECTION` environment variable
+3. **Layer 3**: TTL-cached `qdrant_list_collections` (300s default)
+
 Check which project you are in and find the corresponding Qdrant collection:
-- `qdrant_list_collections`: Run this once to see available "memories".
+- `qdrant_list_collections`: Run this once to see available "memories" (cached by default).
 - Collection names follow the pattern: `project-<folder_name_lowercase>`.
 
 ### 2. The "Search First" Protocol

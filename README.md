@@ -11,6 +11,9 @@ This MCP server handles the _retrieval_ and _management_ of vectors, but it work
 Pair it with **[Qdrant Sentinel](https://github.com/neco001/Qdrant_Sentinel.git)** — an automated codebase indexer that watches your local projects and keeps them synced with Qdrant in real-time. Together, they provide a seamless "memory" for your AI agents.
 
 ### 🔄 Data Flow
+- **Collection Resolution**: 3-layer protocol (qdrant_index.toml → QDRANT_DEFAULT_COLLECTION → TTL-cached qdrant_list_collections)
+- **Redundancy Reduction**: TTL cache (300s default) eliminates repeated Qdrant HTTP calls
+- **Fallback Support**: `QDRANT_DEFAULT_COLLECTION` env var for zero-config setups
 ```mermaid
 graph LR
     A[Local Code] -->|Real-time Watch| B(Qdrant Sentinel)

@@ -1,4 +1,5 @@
 import os
+import logging
 import requests
 import uuid
 import threading
@@ -7,26 +8,81 @@ from urllib.parse import quote
 from typing import Dict, Any, List, Optional, Union
 from openai import OpenAI
 from fastmcp import FastMCP
+# Add TOML parsing support
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
 
 
 def normalize_file_path_for_qdrant(raw_path: str) -> str:
     """
     Normalize file path for Qdrant storage.
-    
+
     Only trims whitespace - does NOT convert path separators.
     This ensures cross-platform compatibility where data may be stored
     with forward slashes (Linux/Mac) or backslashes (Windows).
-    
+
     Args:
         raw_path: The file path to normalize
-        
+
     Returns:
         Trimmed path string, or None/empty string as-is
     """
     if raw_path is None:
         return raw_path
-    
+
     return raw_path.strip()
+
+# Add qdrant_index.toml reader function
+def read_qdrant_index(project_path: str) -> Optional[Dict[str, Any]]:
+    """
+    Read qdrant_index.toml file from project root to get collection metadata.
+
+    Args:
+        project_path: Path to the project root directory
+
+    Returns:
+        Parsed metadata dict or None if file missing/malformed
+    """
+    toml_path = os.path.join(project_path, "qdrant_index.toml")
+    if not os.path.exists(toml_path):
+        return None
+
+    try:
+        with open(toml_path, "rb") as f:
+            return tomllib.load(f).get("qdrant", None)
+    except (tomllib.TOMLDecodeError, IOError) as e:
+        logging.warning(f"Failed to parse qdrant_index.toml: {str(e)}")
+        return None
+
+@mcp.tool()
+def qdrant_find_collection(project_path: str, collection_query: str) -> Optional[str]:
+    """
+    Find matching Qdrant collection using 3-layer resolution protocol.
+
+    Args:
+        project_path: Path to project root for qdrant_index.toml lookup
+        collection_query: Partial or full collection name to match
+
+    Returns:
+        Matched collection name or None if no match found
+    """
+    try:
+        # Layer 1: Check qdrant_index.toml
+        index_data = read_qdrant_index(project_path)
+        if index_data and 'collections' in index_data:
+            for coll in index_data['collections']:
+                if collection_query.lower() in coll.lower():
+                    return coll
+        # Layer 2: Fallback to QDRANT_DEFAULT_COLLECTION env var
+        default_coll = os.getenv('QDRANT_DEFAULT_COLLECTION')
+        if default_coll and collection_query.lower() in default_coll.lower():
+            return default_coll
+    except Exception as e:
+        logging.warning(f"Collection lookup failed: {str(e)}")
+    # Layer 3: Defer to TTL-cached qdrant_list_collections (to be implemented)
+    return None
 
 # Initialize FastMCP
 mcp = FastMCP("Qdrant Universal")
@@ -36,12 +92,18 @@ QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 EMBEDDING_API_KEY = os.getenv("EMBEDDING_API_KEY", "")
 EMBEDDING_BASE_URL = os.getenv("EMBEDDING_BASE_URL", "https://dashscope-intl.aliyuncs.com/compatible-mode/v1")
 EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME", "text-embedding-v4")
+# Add default collection fallback support
+QDRANT_DEFAULT_COLLECTION = os.getenv("QDRANT_DEFAULT_COLLECTION", "")
 
 # Initialize global clients and session
 _openai_client: Optional[OpenAI] = None
 _client_lock = threading.Lock()
 _collection_lock = threading.Lock()
 _http_session = requests.Session()
+# TTL cache for qdrant_list_collections
+_collection_cache: Optional[List[Dict[str, Any]]] = None
+_cache_timestamp: Optional[float] = None
+import time
 
 def get_openai_client() -> OpenAI:
     """Lazy initialization of the OpenAI client."""
@@ -60,12 +122,12 @@ def get_openai_client() -> OpenAI:
 def get_embedding(text: str) -> List[float]:
     """Get embedding for text using OpenAI-compatible API."""
     client = get_openai_client()
-    
+
     response = client.embeddings.create(
         input=text,
         model=EMBEDDING_MODEL_NAME
     )
-    
+
     return response.data[0].embedding
 
 def get_collection_size(collection_name: str) -> Optional[int]:
@@ -74,10 +136,10 @@ def get_collection_size(collection_name: str) -> Optional[int]:
         response = _http_session.get(f"{QDRANT_URL}/collections/{quote(collection_name)}", timeout=5)
         if response.status_code != 200:
             return None
-        
+
         data = response.json().get("result", {})
         vectors = data.get("config", {}).get("params", {}).get("vectors", {})
-        
+
         if isinstance(vectors, dict):
             if "size" in vectors:
                 return vectors["size"]
@@ -110,7 +172,7 @@ def create_collection_if_not_exists(collection_name: str, vector_size: int):
         response = _http_session.get(f"{QDRANT_URL}/collections/{safe_name}", timeout=5)
         if response.status_code == 200:
             return
-            
+
         config = {
             "vectors": {
                 "size": vector_size,
@@ -147,7 +209,7 @@ def qdrant_search(query: str, collection_name: str, limit: int = 5, filter_metad
         "limit": limit,
         "with_payload": True
     }
-    
+
     if parsed_filter:
         must_filters = []
         for key, value in parsed_filter.items():
@@ -157,15 +219,15 @@ def qdrant_search(query: str, collection_name: str, limit: int = 5, filter_metad
             })
         if must_filters:
             search_payload["filter"] = {"must": must_filters}
-    
+
     response = _http_session.post(
         f"{QDRANT_URL}/collections/{quote(collection_name)}/points/search",
         json=search_payload
     )
-    
+
     if response.status_code != 200:
         raise Exception(f"Search failed for {collection_name}: {response.text}")
-        
+
     return [hit["payload"] for hit in response.json().get("result", [])]
 
 @mcp.tool()
@@ -178,21 +240,21 @@ def qdrant_scroll(collection_name: str, limit: int = 10, offset: Optional[str] =
     }
     if offset:
         payload["offset"] = offset
-        
+
     response = _http_session.post(
         f"{QDRANT_URL}/collections/{quote(collection_name)}/points/scroll",
         json=payload
     )
-    
+
     if response.status_code != 200:
         raise Exception(f"Scroll failed: {response.text}")
-        
+
     return response.json().get("result", {})
 
 @mcp.tool()
 def qdrant_store(text: str, metadata: Dict[str, Any], collection_name: str) -> str:
     vector = get_embedding(text)
-    
+
     try:
         validate_qdrant_collection(collection_name, len(vector))
     except ValueError as e:
@@ -203,13 +265,13 @@ def qdrant_store(text: str, metadata: Dict[str, Any], collection_name: str) -> s
             raise e
 
     point_id = str(uuid.uuid4())
-    
+
     if "text" in metadata:
         raise ValueError("Metadata cannot contain 'text' key as it is reserved for the document content.")
-        
+
     payload = {"text": text}
     payload.update(metadata)
-    
+
     point = {
         "points": [
             {
@@ -219,15 +281,15 @@ def qdrant_store(text: str, metadata: Dict[str, Any], collection_name: str) -> s
             }
         ]
     }
-    
+
     response = _http_session.put(
         f"{QDRANT_URL}/collections/{quote(collection_name)}/points?wait=true",
         json=point
     )
-    
+
     if response.status_code != 200:
         raise Exception(f"Store failed: {response.text}")
-        
+
     return f"Stored in {collection_name} (size {len(vector)}) with ID: {point_id}"
 
 @mcp.tool()
@@ -246,28 +308,28 @@ def qdrant_get_symbol_code(collection_name: str, symbol_name: str, file_path: st
         "with_payload": True,
         "with_vectors": False
     }
-    
+
     response = _http_session.post(
         f"{QDRANT_URL}/collections/{quote(collection_name)}/points/scroll",
         json=payload
     )
-    
+
     if response.status_code != 200:
         raise Exception(f"Failed to fetch chunks: {response.text}")
-        
+
     points = response.json().get("result", {}).get("points", [])
-    
+
     if not points:
         return ""
-        
+
     # Sort points by chunk_index
     points.sort(key=lambda p: p.get("payload", {}).get("chunk_index", 0))
-    
+
     code_parts = []
     for p in points:
         text = p.get("payload", {}).get("text", "")
         code_parts.append(text)
-        
+
     return "".join(code_parts)
 
 @mcp.tool()
@@ -281,23 +343,23 @@ def qdrant_list_symbols(collection_name: str, file_path: Optional[str] = None) -
         "with_payload": ["symbol_name", "symbol_type", "file_path"],
         "with_vectors": False
     }
-    
+
     if file_path:
         normalized_path = normalize_file_path_for_qdrant(file_path)
         payload["filter"] = {
             "must": [{"key": "file_path", "match": {"value": normalized_path}}]
         }
-        
+
     response = _http_session.post(
         f"{QDRANT_URL}/collections/{quote(collection_name)}/points/scroll",
         json=payload
     )
-    
+
     if response.status_code != 200:
         raise Exception(f"Failed to list symbols: {response.text}")
-        
+
     points = response.json().get("result", {}).get("points", [])
-    
+
     symbols = []
     seen = set()
     for p in points:
@@ -309,7 +371,7 @@ def qdrant_list_symbols(collection_name: str, file_path: Optional[str] = None) -
             if key not in seen:
                 seen.add(key)
                 symbols.append({"symbol_name": name, "symbol_type": stype})
-                
+
     return symbols
 
 @mcp.tool()
@@ -320,7 +382,7 @@ def qdrant_optimize_collection(collection_name: str) -> str:
     """
     fields = ["language", "symbol_type", "file_path", "symbol_name"]
     results = []
-    
+
     for field in fields:
         payload = {
             "field_name": field,
@@ -334,63 +396,84 @@ def qdrant_optimize_collection(collection_name: str) -> str:
             results.append(f"Indexed {field}")
         else:
             results.append(f"Failed {field}: {response.text}")
-            
+
     return "\n".join(results)
 
 @mcp.tool()
-def qdrant_list_collections() -> List[Dict[str, Any]]:
-    """List all collections in Qdrant with their metadata."""
-    response = requests.get(
-        f"{QDRANT_URL}/collections",
-        timeout=5
-    )
-    
-    if response.status_code != 200:
-        raise Exception(f"Failed to list collections: {response.text}")
-    
-    data = response.json()
-    collections = data.get("result", {}).get("collections", [])
-    
-    result = []
-    for coll in collections:
-        coll_name = coll.get("name", "")
-        # Fetch detailed info for each collection to get vector_size and point_count
-        try:
-            detail_response = requests.get(
-                f"{QDRANT_URL}/collections/{coll_name}",
-                timeout=5
-            )
-            if detail_response.status_code == 200:
-                detail_data = detail_response.json()
-                result_config = detail_data.get("result", {})
-                config = result_config.get("config", {})
-                params = config.get("params", {})
-                vectors = params.get("vectors", {})
-                
-                result.append({
-                    "name": coll_name,
-                    "vector_size": vectors.get("size", 0) if isinstance(vectors, dict) else 0,
-                    "point_count": result_config.get("points_count", 0),
-                    "distance_metric": vectors.get("distance", "Cosine") if isinstance(vectors, dict) else "Cosine"
-                })
-            else:
-                # Fallback to minimal info if detailed request fails
+def qdrant_list_collections(ttl_seconds: int = 300) -> List[Dict[str, Any]]:
+    """List all collections in Qdrant with their metadata (TTL cache enabled to reduce redundant HTTP calls).
+
+    Args:
+        ttl_seconds: Time-to-live for cached collection data (default: 300 seconds)
+    """
+    global _collection_cache, _cache_timestamp
+    current_time = time.time()
+
+    # Return cached data if valid
+    if _collection_cache and _cache_timestamp and (current_time - _cache_timestamp) < ttl_seconds:
+        logging.debug("Returning cached Qdrant collection list")
+        return _collection_cache
+
+    try:
+        # Use global _http_session for consistency with other functions
+        response = _http_session.get(
+            f"{QDRANT_URL}/collections",
+            timeout=5
+        )
+        response.raise_for_status()
+
+        data = response.json()
+        collections = data.get("result", {}).get("collections", [])
+
+        result = []
+        for coll in collections:
+            coll_name = coll.get("name", "")
+            # Fetch detailed info for each collection to get vector_size and point_count
+            try:
+                detail_response = _http_session.get(
+                    f"{QDRANT_URL}/collections/{coll_name}",
+                    timeout=5
+                )
+                if detail_response.status_code == 200:
+                    detail_data = detail_response.json()
+                    result_config = detail_data.get("result", {})
+                    config = result_config.get("config", {})
+                    params = config.get("params", {})
+                    vectors = params.get("vectors", {})
+
+                    result.append({
+                        "name": coll_name,
+                        "vector_size": vectors.get("size", 0) if isinstance(vectors, dict) else 0,
+                        "point_count": result_config.get("points_count", 0),
+                        "distance_metric": vectors.get("distance", "Cosine") if isinstance(vectors, dict) else "Cosine"
+                    })
+                else:
+                    # Fallback to minimal info if detailed request fails
+                    result.append({
+                        "name": coll_name,
+                        "vector_size": 0,
+                        "point_count": 0,
+                        "distance_metric": "Cosine"
+                    })
+            except Exception:
+                # Fallback on error
                 result.append({
                     "name": coll_name,
                     "vector_size": 0,
                     "point_count": 0,
                     "distance_metric": "Cosine"
                 })
-        except Exception:
-            # Fallback on error
-            result.append({
-                "name": coll_name,
-                "vector_size": 0,
-                "point_count": 0,
-                "distance_metric": "Cosine"
-            })
-    
-    return result
+
+        # Update cache with fresh data
+        _collection_cache = result
+        _cache_timestamp = current_time
+        return result
+    except requests.exceptions.RequestException as e:
+        # Return cached data if available on failure
+        if _collection_cache:
+            logging.warning(f"Using stale cached collection list (failure: {str(e)})")
+            return _collection_cache
+        raise Exception(f"Failed to list collections: {str(e)}")
 
 if __name__ == "__main__":
     mcp.run()
